@@ -86,7 +86,7 @@ Guardrails, notify and cost guard have the same `init`, and handover is one prom
 
 1. It makes a throwaway home folder and Claude Code config folder that already hold settings of their own (a theme, an env variable, a permission, a Stop hook).
 2. It installs every tool from GitHub with `npx` and runs every hook exactly as `settings.json` lists it, with the JSON Claude Code sends: guardrails denies `rm -rf /` and passes `npm test` in silence, notify stays quiet after a 5-second turn and pings after a 60-second one, cost guard holds a prompt over a hard budget but lets `/compact` through, the starter kit's CLAUDE.md passes the doctor in CI mode, two teammates share a session through one git remote, a replay export escapes hostile text, and the handover self-test passes.
-3. With a Claude Code CLI available, it validates this marketplace, installs all seven plugins from GitHub with `claude plugin install`, checks their token estimate, and runs the HUD's engine tests inside that Claude Code.
+3. With a Claude Code CLI available, it validates this marketplace, installs all seven plugins from GitHub with `claude plugin install`, runs the guardrails, notify and cost guard plugins' own hooks from the installed copies, checks the token estimate, and runs the HUD's engine tests inside that Claude Code.
 4. It uninstalls everything and checks that `settings.json` is exactly what the user had.
 
 ```bash

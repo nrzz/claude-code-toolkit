@@ -253,6 +253,26 @@ if (want("marketplace")) {
     }
     const list = parse(claude(["plugin", "list", "--json"]).out) || [];
     check("marketplace", "every plugin installed and enabled", names.every((n) => list.some((p) => p.id === `${n}@claude-code-toolkit` && p.enabled)), JSON.stringify(list.map((p) => p.id)));
+    // The plugins' own hooks, run the way Claude Code runs a plugin's hook: ${CLAUDE_PLUGIN_ROOT}
+    // expanded to the installed copy, the event's JSON on stdin.
+    const pluginHook = (id, event, payload) => {
+      const p = list.find((x) => x.id === id);
+      const spec = p && parse(fs.readFileSync(path.join(p.installPath, "hooks", "hooks.json"), "utf8"));
+      const h = spec?.hooks?.[event]?.[0]?.hooks?.[0];
+      if (!h) return { code: -1, out: "", err: `${id} has no ${event} hook` };
+      const dataDir = path.join(pHome, "plugin-data", id.replace(/[^\w-]/g, "-"));
+      const expand = (s) => s.replaceAll("${CLAUDE_PLUGIN_ROOT}", p.installPath).replaceAll("${CLAUDE_PLUGIN_DATA}", dataDir);
+      const input = JSON.stringify({ session_id: "e2e-plugin", transcript_path: "", cwd: project, hook_event_name: event, ...payload });
+      return run(expand(h.command), (h.args || []).map(expand), { cwd: project, input, env: { ...pEnv, CLAUDE_PLUGIN_ROOT: p.installPath, CLAUDE_PLUGIN_DATA: dataDir } });
+    };
+    const denied = pluginHook("guardrails@claude-code-toolkit", "PreToolUse", { tool_name: "Bash", tool_input: { command: "rm -rf /" } });
+    check("marketplace", "the guardrails plugin's own hook denies rm -rf /", parse(denied.out)?.hookSpecificOutput?.permissionDecision === "deny", denied.out + denied.err);
+    const allowed = pluginHook("guardrails@claude-code-toolkit", "PreToolUse", { tool_name: "Bash", tool_input: { command: "npm test" } });
+    check("marketplace", "the guardrails plugin's own hook passes npm test in silence", allowed.code === 0 && allowed.out.trim() === "", allowed.out + allowed.err);
+    const ping = pluginHook("notify@claude-code-toolkit", "Notification", { message: "Claude needs your permission to use Bash", notification_type: "permission_prompt" });
+    check("marketplace", "the notify plugin's own hook pings on a permission prompt", /permission/.test(parse(ping.out)?.terminalSequence || ""), ping.out + ping.err);
+    const budget = pluginHook("cost-guard@claude-code-toolkit", "UserPromptSubmit", { prompt: "hi", source: "user" });
+    check("marketplace", "the cost-guard plugin's own hook runs, silent with no budget", budget.code === 0 && budget.out.trim() === "", budget.out + budget.err);
     let total = 0;
     for (const name of names) {
       const d = claude(["plugin", "details", `${name}@claude-code-toolkit`]);

@@ -252,7 +252,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
         <ol class="steps">
           <li>A throwaway home and Claude Code config that already hold settings of their own.</li>
           <li>Every tool installed from GitHub, and every hook run exactly as <code>settings.json</code> lists it, with the JSON Claude Code sends: guardrails denies <code>rm -rf /</code>, notify pings after a long turn, cost guard holds a prompt over a hard budget, two teammates share a session through one git remote, a replay escapes hostile text.</li>
-          <li>All seven plugins installed from this marketplace with <code>claude plugin install</code>, their token estimate checked, and the HUD's engine tests run inside Claude Code.</li>
+          <li>All seven plugins installed from this marketplace with <code>claude plugin install</code>, their own hooks run from the installed copies, their token estimate checked, and the HUD's engine tests run inside Claude Code.</li>
           <li>Everything uninstalled, and <code>settings.json</code> checked to be exactly what the user had.</li>
         </ol>
       </div>
