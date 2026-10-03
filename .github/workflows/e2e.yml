@@ -1,0 +1,31 @@
+name: e2e
+
+# Every tool installed from GitHub into a fresh Claude Code config, as a new user would, on every
+# push to main, on pull requests, and every Monday so a Claude Code update that breaks a tool shows up.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the Claude Code CLI (the plugin commands need no login)
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Run every tool end to end
+        run: node e2e/run.mjs
+        env:
+          E2E_CLAUDE: claude

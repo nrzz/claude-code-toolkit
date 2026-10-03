@@ -1,0 +1,102 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-code-toolkit",
+  "description": "Small, dependency-free Claude Code plugins that cost little or no tokens: themes and a HUD, safety guardrails, notifications, token budgets, a CLAUDE.md doctor and session replays.",
+  "owner": {
+    "name": "Naresh Prabu"
+  },
+  "plugins": [
+    {
+      "name": "glow",
+      "description": "15 color themes for the whole Claude Code interface (pick them in /theme), a themed status line with a live context meter, plan limits and zero-token tips, and /glow:setup, /glow:theme and /glow:doctor.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-code-glow.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-code-glow"
+    },
+    {
+      "name": "glow-hud",
+      "description": "Early access: a themed bar above the prompt with a live context meter, plan limits, session cost, a token-saving tip and one-key Compact and Theme buttons, plus a /glow theme picker. Terminal and desktop app. Needs Claude Code 2.1.286 or newer.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/nrzz/claude-code-glow.git",
+        "path": "hud"
+      },
+      "homepage": "https://github.com/nrzz/claude-code-glow#the-hud"
+    },
+    {
+      "name": "guardrails",
+      "description": "Blocks rm -rf on a root or home folder, force pushes to protected branches, secrets in commits and .env edits, and asks before resets, publishes, destroys and curl | sh. Three presets (strict, balanced, relaxed); zero tokens for every allowed call.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "security",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-code-guardrails.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-code-guardrails"
+    },
+    {
+      "name": "notify",
+      "description": "A ping when Claude Code needs you or finishes, so you can look away while it works. Terminal, desktop, phone (ntfy), Slack, Discord, Teams or your own command. The hooks print nothing the model reads: 0 tokens.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-code-notify.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-code-notify"
+    },
+    {
+      "name": "cost-guard",
+      "description": "A hook that checks your spending against daily and weekly budgets before every prompt: a warning line (shown to you, never sent to the model) at 50%, 80% and 100%, and in hard mode a block once the budget is used. Costs no tokens.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-cost-guard.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-cost-guard"
+    },
+    {
+      "name": "md-doctor",
+      "description": "Measure what your CLAUDE.md files cost in every session, find what is stale, duplicated or better placed in a skill, and see the fixes that save the most tokens. One user-only skill: /md-doctor:md-doctor.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-md-doctor.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-md-doctor"
+    },
+    {
+      "name": "replay",
+      "description": "Export this session as a self-contained HTML replay with secrets redacted (/replay:replay). The claude-replay command also searches, lists and exports any past session, at no token cost.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-session-replay.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-session-replay"
+    }
+  ]
+}

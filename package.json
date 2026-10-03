@@ -1,0 +1,17 @@
+{
+  "name": "claude-code-toolkit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nine small, dependency-free Claude Code tools in one plugin marketplace, with an end-to-end test of all nine together",
+  "scripts": {
+    "test": "node --test",
+    "e2e": "node e2e/run.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": "github:nrzz/claude-code-toolkit",
+  "homepage": "https://nrzz.github.io/claude-code-toolkit/",
+  "license": "MIT",
+  "author": "Naresh Prabu"
+}

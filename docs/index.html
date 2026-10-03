@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Code toolkit: open-source plugins that save tokens</title>
+<meta name="description" content="Nine small, open-source tools for Claude Code: themes and a HUD, safety guardrails, notifications, token budgets, a CLAUDE.md doctor, session replays, team session sharing, starter kits and handovers. No dependencies, few or no tokens.">
+<link rel="canonical" href="https://nrzz.github.io/claude-code-toolkit/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Claude Code toolkit">
+<meta property="og:description" content="Nine small, open-source tools that make Claude Code cheaper, safer and easier to share. No dependencies, few or no tokens, tested together on Windows, macOS and Linux.">
+<meta property="og:url" content="https://nrzz.github.io/claude-code-toolkit/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Claude Code toolkit">
+<meta name="twitter:description" content="Nine small, open-source tools that make Claude Code cheaper, safer and easier to share.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d97757'/%3E%3Cpath d='M9 11l6 5-6 5M17 22h7' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Claude Code toolkit",
+  "url": "https://nrzz.github.io/claude-code-toolkit/",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "item": {"@type": "SoftwareSourceCode", "name": "claude-code-handover", "codeRepository": "https://github.com/nrzz/claude-code-handover", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 2, "item": {"@type": "SoftwareSourceCode", "name": "claude-code-team-sync", "codeRepository": "https://github.com/nrzz/claude-code-team-sync", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 3, "item": {"@type": "SoftwareSourceCode", "name": "claude-code-glow", "codeRepository": "https://github.com/nrzz/claude-code-glow", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 4, "item": {"@type": "SoftwareSourceCode", "name": "claude-code-guardrails", "codeRepository": "https://github.com/nrzz/claude-code-guardrails", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 5, "item": {"@type": "SoftwareSourceCode", "name": "claude-code-notify", "codeRepository": "https://github.com/nrzz/claude-code-notify", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 6, "item": {"@type": "SoftwareSourceCode", "name": "claude-cost-guard", "codeRepository": "https://github.com/nrzz/claude-cost-guard", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 7, "item": {"@type": "SoftwareSourceCode", "name": "claude-md-doctor", "codeRepository": "https://github.com/nrzz/claude-md-doctor", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 8, "item": {"@type": "SoftwareSourceCode", "name": "claude-code-starter-kits", "codeRepository": "https://github.com/nrzz/claude-code-starter-kits", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 9, "item": {"@type": "SoftwareSourceCode", "name": "claude-session-replay", "codeRepository": "https://github.com/nrzz/claude-session-replay", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}}
+  ]
+}
+</script>
+<style>
+:root {
+  --bg: #faf9f5; --surface: #ffffff; --surface-2: #f3f1ea; --text: #1f1e1d; --muted: #5e5d59;
+  --border: #e3e0d6; --accent: #c4623f; --accent-soft: #f6e3da; --code-bg: #f3f1ea; --ok: #2f7d4f; --ok-soft: #e1f1e7;
+  --shadow: 0 1px 2px rgba(31, 30, 29, .06), 0 4px 16px rgba(31, 30, 29, .04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1918; --surface: #232220; --surface-2: #2b2a27; --text: #ecebe7; --muted: #a8a69f;
+    --border: #3a3935; --accent: #e08a68; --accent-soft: #3d2a22; --code-bg: #2b2a27; --ok: #6fcf97; --ok-soft: #1f3328;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .2);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1a1918; --surface: #232220; --surface-2: #2b2a27; --text: #ecebe7; --muted: #a8a69f;
+  --border: #3a3935; --accent: #e08a68; --accent-soft: #3d2a22; --code-bg: #2b2a27; --ok: #6fcf97; --ok-soft: #1f3328;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 16px rgba(0, 0, 0, .2);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+a { color: var(--accent); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code, pre, .cmd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: .9em; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+header.top { border-bottom: 1px solid var(--border); }
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 650; color: var(--text); text-decoration: none; }
+.brand svg { flex: none; }
+.nav { display: flex; gap: 18px; font-size: .95rem; }
+.nav a { color: var(--muted); text-decoration: none; }
+.nav a:hover { color: var(--text); }
+.hero { padding-top: 64px; padding-bottom: 40px; }
+.hero h1 { font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.12; letter-spacing: -.02em; margin: 0 0 18px; max-width: 18ch; }
+.hero p.lead { font-size: 1.15rem; color: var(--muted); max-width: 62ch; margin: 0 0 28px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
+.cmd {
+  display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 10px 10px 14px; box-shadow: var(--shadow); max-width: 100%; min-width: 0;
+}
+.cmd code { white-space: nowrap; overflow-x: auto; min-width: 0; font-size: .92rem; scrollbar-width: thin; }
+.cmd .prompt { color: var(--muted); user-select: none; }
+button.copy {
+  flex: none; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 7px;
+  font: inherit; font-size: .8rem; padding: 4px 10px; cursor: pointer;
+}
+button.copy:hover { border-color: var(--accent); }
+button.copy[data-done] { color: var(--ok); border-color: var(--ok); }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 600;
+  background: var(--accent); color: #fff; text-decoration: none; border: 1px solid transparent;
+}
+.btn.secondary { background: transparent; color: var(--text); border-color: var(--border); }
+.btn:hover { filter: brightness(1.05); text-decoration: none; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 40px 0 0; padding: 0; list-style: none; }
+.stats li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.stats b { display: block; font-size: 1.6rem; letter-spacing: -.01em; }
+.stats span { color: var(--muted); font-size: .9rem; }
+section { padding: 36px 0; }
+section h2 { font-size: 1.6rem; letter-spacing: -.01em; margin: 0 0 8px; }
+section > .wrap > p.sub { color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+  display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow); min-width: 0;
+}
+.card h3 { margin: 0; font-size: 1.05rem; }
+.card h3 a { color: var(--text); text-decoration: none; }
+.card h3 a:hover { color: var(--accent); }
+.card p { margin: 0; color: var(--muted); font-size: .95rem; flex: 1; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: .75rem; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+.tag.tokens { background: var(--ok-soft); color: var(--ok); border-color: transparent; font-weight: 600; }
+.card .cmd { box-shadow: none; padding: 8px 8px 8px 10px; border-radius: 8px; background: var(--code-bg); align-items: flex-start; }
+.card .cmd code { font-size: .8rem; white-space: normal; overflow-wrap: anywhere; overflow: visible; flex: 1; line-height: 1.5; }
+.principles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.principles div { border-top: 3px solid var(--accent); padding-top: 12px; }
+.principles h3 { margin: 0 0 6px; font-size: 1rem; }
+.principles p { margin: 0; color: var(--muted); font-size: .95rem; }
+ol.steps { margin: 0; padding-left: 1.3em; max-width: 78ch; }
+ol.steps li { margin: 0 0 10px; }
+ol.steps li::marker { color: var(--accent); font-weight: 700; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+footer { border-top: 1px solid var(--border); margin-top: 32px; padding: 28px 0 40px; color: var(--muted); font-size: .9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+@media (max-width: 900px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .principles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .hero { padding-top: 40px; padding-bottom: 24px; }
+  .grid, .principles { grid-template-columns: minmax(0, 1fr); }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nav a.hide-sm { display: none; }
+  .hero .cmd { align-items: flex-start; width: 100%; }
+  .hero .cmd code { white-space: normal; overflow-wrap: anywhere; overflow: visible; flex: 1; line-height: 1.5; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#">
+      <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#d97757"/><path d="M9 11l6 5-6 5M17 22h7" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Claude Code toolkit
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#tools">Tools</a>
+      <a class="hide-sm" href="#tested">Tested together</a>
+      <a href="https://github.com/nrzz/claude-code-toolkit">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <h1>Claude Code, cheaper, safer and easier to share</h1>
+    <p class="lead">Nine small, open-source tools. Each is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all nine are tested together, installed from GitHub, on Windows, macOS and Linux.</p>
+    <div class="cta">
+      <div class="cmd"><code><span class="prompt">&gt; </span>/plugin marketplace add nrzz/claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin marketplace add nrzz/claude-code-toolkit">Copy</button></div>
+      <a class="btn secondary" href="https://github.com/nrzz/claude-code-toolkit">View on GitHub</a>
+    </div>
+    <ul class="stats">
+      <li><b>9</b><span>tools, MIT licensed</span></li>
+      <li><b>0</b><span>dependencies</span></li>
+      <li><b>2,900+</b><span>automated tests</span></li>
+      <li><b>3 OS</b><span>in every tool's CI</span></li>
+    </ul>
+  </div>
+
+  <section id="tools">
+    <div class="wrap">
+      <h2>Pick what you need</h2>
+      <p class="sub">The green tag is what a tool adds to your sessions. Every README has a table with the details, and a section that says what was verified and how.</p>
+      <div class="grid">
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-code-handover">Handover</a></h3>
+          <p>Stop paying to reload one giant chat. Short sessions that start from a handover file Claude Code loads by itself, a decisions log, and recall of earlier sessions.</p>
+          <div class="tags"><span class="tag tokens">a short file, plus recalled lines</span><span class="tag">setup prompt</span></div>
+          <a href="https://github.com/nrzz/claude-code-handover#set-up-in-3-steps">Paste the setup prompt</a>
+        </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-code-team-sync">Team sync</a></h3>
+          <p>Share sessions, notes and team context with coworkers through git or a shared folder, synced in the background. Load a teammate's session by topic.</p>
+          <div class="tags"><span class="tag tokens">0 when nothing is new</span><span class="tag">CLI + hooks</span></div>
+          <div class="cmd"><code>npx -y github:nrzz/claude-code-team-sync init</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-code-team-sync init">Copy</button></div>
+        </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-code-glow">Glow</a></h3>
+          <p>15 themes for the whole interface, a status line with a context meter and plan limits, and a live HUD with tips that help you spend fewer tokens.</p>
+          <div class="tags"><span class="tag tokens">0 tokens</span><span class="tag">plugin</span><span class="tag">themes</span></div>
+          <div class="cmd"><code>/plugin install glow@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install glow@claude-code-toolkit">Copy</button></div>
+        </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-code-guardrails">Guardrails</a></h3>
+          <p>Stops <code>rm -rf /</code>, force pushes to protected branches, secrets in commits and <code>.env</code> edits, and asks before resets, publishes and <code>curl | sh</code>.</p>
+          <div class="tags"><span class="tag tokens">0 per allowed call</span><span class="tag">plugin</span><span class="tag">safety</span></div>
+          <div class="cmd"><code>/plugin install guardrails@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install guardrails@claude-code-toolkit">Copy</button></div>
+        </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-code-notify">Notify</a></h3>
+          <p>A ping when Claude needs you or finishes: terminal, desktop, phone through ntfy, Slack, Discord, Teams or your own command. Short turns stay quiet.</p>
+          <div class="tags"><span class="tag tokens">0 tokens</span><span class="tag">plugin</span></div>
+          <div class="cmd"><code>/plugin install notify@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install notify@claude-code-toolkit">Copy</button></div>
+        </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-cost-guard">Cost guard</a></h3>
+          <p>Daily and weekly budgets counted from your local transcripts, warnings at 50%, 80% and 100%, and an optional hard stop that still lets <code>/compact</code> through.</p>
+          <div class="tags"><span class="tag tokens">0 tokens</span><span class="tag">plugin</span><span class="tag">budgets</span></div>
+          <div class="cmd"><code>/plugin install cost-guard@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install cost-guard@claude-code-toolkit">Copy</button></div>
+        </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-md-doctor">CLAUDE.md doctor</a></h3>
+          <p>What your memory files cost in every session, what is stale or duplicated, and the fixes that save the most tokens. Runs in CI too.</p>
+          <div class="tags"><span class="tag tokens">0: runs outside Claude</span><span class="tag">CLI + plugin</span></div>
+          <div class="cmd"><code>npx -y github:nrzz/claude-md-doctor</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-md-doctor">Copy</button></div>
+        </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-code-starter-kits">Starter kits</a></h3>
+          <p>A lean CLAUDE.md, permission rules, <code>/test</code> and <code>/check</code> skills and a Haiku test runner for .NET, Node, Python, Go, Flutter or Java, in one command.</p>
+          <div class="tags"><span class="tag tokens">230 to 260 per session</span><span class="tag">CLI</span></div>
+          <div class="cmd"><code>npx -y github:nrzz/claude-code-starter-kits</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-code-starter-kits">Copy</button></div>
+        </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-session-replay">Session replay</a></h3>
+          <p>Search everything you discussed in past sessions, and export one as a self-contained HTML replay or Markdown, with secrets redacted.</p>
+          <div class="tags"><span class="tag tokens">0: runs outside Claude</span><span class="tag">CLI + plugin</span></div>
+          <div class="cmd"><code>npx -y github:nrzz/claude-session-replay list</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-session-replay list">Copy</button></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Built the same way</h2>
+      <p class="sub">So you can add one without wondering what it does to your machine, your settings or your bill.</p>
+      <div class="principles">
+        <div><h3>No dependencies</h3><p>Node 18 or newer and nothing from npm. There is nothing to audit but the code itself.</p></div>
+        <div><h3>Token cost is a feature</h3><p>Hooks talk to you, not to the model. Skills Claude does not need are user-only. Every README states what each part costs.</p></div>
+        <div><h3>Your settings stay yours</h3><p>A backup before every write, only their own keys, invalid JSON left alone, and an uninstall that restores what you had.</p></div>
+        <div><h3>Honest READMEs</h3><p>Each says what was verified and how, and what was not. Each runs its tests on Windows, macOS and Linux with Node 20, 22 and 24.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tested">
+    <div class="wrap">
+      <h2>Tested together</h2>
+      <p class="sub">One end-to-end run does what a new user would, on a clean machine, and CI repeats it every week so a Claude Code update that breaks a tool shows up.</p>
+      <div class="panel">
+        <ol class="steps">
+          <li>A throwaway home and Claude Code config that already hold settings of their own.</li>
+          <li>Every tool installed from GitHub, and every hook run exactly as <code>settings.json</code> lists it, with the JSON Claude Code sends: guardrails denies <code>rm -rf /</code>, notify pings after a long turn, cost guard holds a prompt over a hard budget, two teammates share a session through one git remote, a replay escapes hostile text.</li>
+          <li>All seven plugins installed from this marketplace with <code>claude plugin install</code>, their token estimate checked, and the HUD's engine tests run inside Claude Code.</li>
+          <li>Everything uninstalled, and <code>settings.json</code> checked to be exactly what the user had.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>MIT licensed. Not affiliated with Anthropic; Claude and Claude Code are Anthropic's products.</span>
+    <span><a href="https://github.com/nrzz/claude-code-toolkit/blob/main/CONTRIBUTING.md">Contribute</a> &middot; <a href="https://github.com/nrzz/claude-code-toolkit/discussions">Discussions</a> &middot; <a href="https://github.com/nrzz/claude-code-toolkit">GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+document.addEventListener("click", function (event) {
+  var button = event.target.closest("button.copy");
+  if (!button) return;
+  var text = button.getAttribute("data-copy");
+  var done = function () {
+    button.textContent = "Copied";
+    button.setAttribute("data-done", "");
+    setTimeout(function () { button.textContent = "Copy"; button.removeAttribute("data-done"); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function () { fallback(text); done(); });
+  } else { fallback(text); done(); }
+  function fallback(value) {
+    var area = document.createElement("textarea");
+    area.value = value; area.setAttribute("readonly", ""); area.style.position = "fixed"; area.style.opacity = "0";
+    document.body.appendChild(area); area.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(area);
+  }
+});
+</script>
+</body>
+</html>
