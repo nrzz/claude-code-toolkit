@@ -45,7 +45,7 @@ fs.writeFileSync(path.join(cfg, "settings.json"), JSON.stringify(ORIGINAL, null,
 const results = [];
 function check(area, what, ok, detail = "") {
   results.push({ area, what, ok: !!ok, detail });
-  console.log(`${ok ? "PASS" : "FAIL"}  ${area.padEnd(12)} ${what}${detail && !ok ? `\n      ${String(detail).slice(0, 400)}` : ""}`);
+  console.log(`${ok ? "PASS" : "FAIL"}  ${area.padEnd(12)} ${what}${detail && !ok ? `\n      ${String(detail).slice(0, 2000)}` : ""}`);
 }
 function run(cmd, argv, { cwd = base, input, env = {}, shell = false, timeout = 240000 } = {}) {
   const t = Date.now();
@@ -283,7 +283,9 @@ if (want("marketplace")) {
     const hud = list.find((p) => p.id === "glow-hud@claude-code-toolkit");
     if (hud) {
       const t = claude(["plugin", "test", hud.installPath], 300000);
-      check("marketplace", "glow-hud's engine tests pass in this Claude Code", t.code === 0 && /\b0 fail/.test(t.out + t.err), (t.out + t.err).slice(-400));
+      const lines = (t.out + t.err).split("\n");
+      const failed = lines.flatMap((l, i) => (/\(fail\)/.test(l) ? lines.slice(i, i + 4) : [])).join("\n");
+      check("marketplace", "glow-hud's engine tests pass in this Claude Code", t.code === 0 && /\b0 fail/.test(t.out + t.err), failed || (t.out + t.err).slice(-400));
     }
   }
 }
