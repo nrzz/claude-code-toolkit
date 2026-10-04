@@ -68,6 +68,10 @@ By Claude Code's own estimate (`claude plugin details`), all seven together add 
 Each tool also runs straight from GitHub with `npx`, nothing to install first:
 
 ```bash
+npx -y github:nrzz/claude-code-handover init
+```
+
+```bash
 npx -y github:nrzz/claude-code-team-sync init
 ```
 
@@ -87,7 +91,7 @@ npx -y github:nrzz/claude-session-replay list
 npx -y github:nrzz/claude-code-glow install
 ```
 
-Guardrails, notify, cost guard and handover have the same `init` (handover's runs in the project folder). Every tool that changes your settings has an `uninstall` that puts them back exactly as they were.
+Guardrails, notify and cost guard have the same `init`; handover's and team sync's run in the project folder. Every tool that changes your settings has an `uninstall` that takes out what it added.
 
 ## Built the same way
 
@@ -101,7 +105,7 @@ Guardrails, notify, cost guard and handover have the same `init` (handover's run
 [`e2e/run.mjs`](e2e/run.mjs) does what a new user would, on a clean machine:
 
 1. It makes a throwaway home folder and Claude Code config folder that already hold settings of their own (a theme, an env variable, a permission, a Stop hook).
-2. It installs every tool from GitHub with `npx` and runs every hook exactly as `settings.json` lists it, with the JSON Claude Code sends: guardrails denies `rm -rf /` and passes `npm test` in silence, notify stays quiet after a 5-second turn and pings after a 60-second one, cost guard holds a prompt over a hard budget but lets `/compact` through, the starter kit's CLAUDE.md passes the doctor in CI mode, two teammates share a session through one git remote, a replay export escapes hostile text, and the handover self-test passes.
+2. It installs every tool from GitHub with `npx` and runs every hook exactly as `settings.json` lists it, with the JSON Claude Code sends: guardrails denies `rm -rf /` and passes `npm test` in silence, notify stays quiet after a 5-second turn and pings after a 60-second one, cost guard holds a prompt over a hard budget but lets `/compact` through, the starter kit's CLAUDE.md passes the doctor in CI mode, two teammates share a session through one git remote, a replay export escapes hostile text, and handover's self-test passes and its `init` sets up a project, changes nothing on a second run and uninstalls cleanly.
 3. In a second home folder it runs the one-command setup as a user would: `install recommended,cost-guard` with options, a guardrails hook it installed denying `rm -rf /`, `status` reading the choices back, then the setup page started for real and driven through its own API (the one-time key refused when missing, Apply changing a theme and removing a tool, Done stopping it), and `uninstall all`.
 4. With a Claude Code CLI available, it validates this marketplace, installs all seven plugins from GitHub with `claude plugin install`, runs the guardrails, notify and cost guard plugins' own hooks from the installed copies, checks the token estimate, and runs the HUD's engine tests inside that Claude Code.
 5. It uninstalls everything and checks that `settings.json` is exactly what the user had, in both home folders.

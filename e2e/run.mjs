@@ -228,6 +228,34 @@ if (want("handover")) {
   if (!LOCAL) git(["clone", "-q", "--depth", "1", "https://github.com/nrzz/claude-code-handover", dir], base);
   const st = run(process.execPath, [path.join(dir, "scripts", "selftest.mjs")], { cwd: dir, timeout: 600000 });
   check("handover", "selftest (synthetic histories) passes", st.code === 0, (st.out + st.err).slice(-400));
+
+  // The one-command setup, in a fresh project and config folder of its own.
+  const hHome = path.join(base, "hh");
+  const hCfg = path.join(hHome, ".claude");
+  const hProj = path.join(base, "handover-project");
+  fs.mkdirSync(hCfg, { recursive: true });
+  fs.mkdirSync(hProj, { recursive: true });
+  fs.writeFileSync(path.join(hCfg, "settings.json"), JSON.stringify(ORIGINAL, null, 2) + "\n");
+  git(["init", "-q"], hProj);
+  const hEnv = { HOME: hHome, USERPROFILE: hHome, CLAUDE_CONFIG_DIR: hCfg, HANDOVER_PROJECTS_DIR: path.join(hCfg, "projects"), HANDOVER_DATA_DIR: path.join(hCfg, "claude-code-handover-data") };
+  const ho = (argv) => run(process.execPath, [path.join(dir, "bin", "claude-handover.mjs"), ...argv], { cwd: hProj, env: hEnv, timeout: 300000 });
+  const personal = ["CLAUDE.local.md", "HANDOVER.md", "DECISIONS.md", "claude-token-rules.md"];
+  const i1 = ho(["init", "--dir", hProj, "--models", "Opus + Sonnet", "--streams", "api, web"]);
+  check("handover", "init sets up a project in one command", i1.code === 0 && personal.every((f) => fs.existsSync(path.join(hProj, f))), (i1.out + i1.err).slice(-600));
+  const hs = () => JSON.parse(fs.readFileSync(path.join(hCfg, "settings.json"), "utf8"));
+  const hHooks = () => JSON.stringify(hs().hooks || {}).replace(/\\\\/g, "/");
+  check("handover", "its hooks and skills are installed, the user's own settings kept",
+    (hHooks().match(/context-guard\.mjs/g) || []).length === 3 && fs.existsSync(path.join(hCfg, "skills", "handover", "SKILL.md")) && hs().theme === "dark" && hs().env?.MY_VAR === "1", hHooks().slice(0, 300));
+  const snapshot = () => personal.map((f) => fs.readFileSync(path.join(hProj, f), "utf8")).join("\u0000") + JSON.stringify(hs());
+  const before = snapshot();
+  const i2 = ho(["init", "--dir", hProj, "--models", "Opus + Sonnet", "--streams", "api, web"]);
+  check("handover", "a second init changes nothing", i2.code === 0 && snapshot() === before && /Nothing to do/.test(i2.out), i2.out.slice(-300));
+  const guard = hs().hooks.SessionStart.flatMap((g) => g.hooks).find((h) => JSON.stringify(h).includes("context-guard"));
+  const g = run(guard.command, guard.args, { cwd: hProj, env: hEnv, input: JSON.stringify({ session_id: "h1", transcript_path: "", cwd: hProj, hook_event_name: "SessionStart", source: "startup" }) });
+  check("handover", "the installed context guard runs as a hook", g.code === 0, g.out + g.err);
+  const u = ho(["uninstall"]);
+  check("handover", "uninstall takes out its hooks and skills and keeps the project's files",
+    u.code === 0 && !hHooks().includes("context-guard") && !fs.existsSync(path.join(hCfg, "skills", "handover", "SKILL.md")) && personal.every((f) => fs.existsSync(path.join(hProj, f))) && hs().env?.MY_VAR === "1", (u.out + u.err).slice(-400));
 }
 
 // ---- the toolkit's plugin marketplace, through Claude Code's own plugin commands ----------------------
