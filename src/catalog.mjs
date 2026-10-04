@@ -53,7 +53,7 @@ export const TOOLS = [
     actions: { status: { label: "Show status", args: () => ["status"] } },
   },
   {
-    id: "notify", repo: "claude-code-notify", bin: "bin/claude-notify.mjs", scope: "user", plugin: "notify",
+    id: "notify", repo: "claude-code-notify", bin: "bin/claude-notify.mjs", scope: "user", plugin: "nudge", oldPlugin: "notify",
     name: "Notify", tokens: "0",
     summary: "A ping when Claude needs you or finishes: in the terminal, on the desktop, on your phone (ntfy), or in Slack, Discord or Teams. Turns under 30 seconds stay quiet.",
     recommended: true,
@@ -90,7 +90,7 @@ export const TOOLS = [
     actions: { test: { label: "Send a test notification", args: () => ["test"] }, status: { label: "Show status", args: () => ["status"] } },
   },
   {
-    id: "glow", repo: "claude-code-glow", bin: "bin/claude-glow.mjs", scope: "user", plugin: "glow",
+    id: "glow", repo: "claude-code-glow", bin: "bin/claude-glow.mjs", scope: "user", plugin: "glowline", oldPlugin: "glow",
     name: "Glow", tokens: "0",
     summary: "14 color themes for the whole interface (plus classic, which keeps Claude's colors), and a status line with a context meter, plan limits, cost and token-saving tips.",
     recommended: true,
@@ -108,7 +108,7 @@ export const TOOLS = [
     actions: {},
   },
   {
-    id: "cost-guard", repo: "claude-cost-guard", bin: "bin/claude-cost-guard.mjs", scope: "user", plugin: "cost-guard",
+    id: "cost-guard", repo: "claude-cost-guard", bin: "bin/claude-cost-guard.mjs", scope: "user", plugin: "spendcap", oldPlugin: "cost-guard",
     name: "Cost guard", tokens: "0",
     summary: "Daily and weekly budgets counted from your local transcripts, with warnings at 50%, 80% and 100% and an optional hard stop that still lets /compact through.",
     recommended: false,

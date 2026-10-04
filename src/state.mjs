@@ -50,7 +50,7 @@ export function readState({ env = process.env, project = process.cwd() } = {}) {
   const s = settings.data || {};
   const hooks = JSON.stringify(s.hooks || {}).replace(/\\\\/g, "/");
   const has = (needle) => hooks.includes(needle);
-  const enabledPlugins = Object.entries(s.enabledPlugins || {}).filter(([, on]) => on === true).map(([k]) => k.split("@")[0]);
+  const enabledPlugins = Object.entries(s.enabledPlugins || {}).filter(([, on]) => on === true).map(([k]) => k.split("@"));
   const proj = projectInfo(project);
   const inProject = (...p) => proj.exists && fs.existsSync(path.join(proj.dir, ...p));
 
@@ -90,7 +90,10 @@ export function readState({ env = process.env, project = process.cwd() } = {}) {
     replay: { installed: false, current: {} },
   };
   for (const t of TOOLS) {
-    tools[t.id].plugin = !!(t.plugin && enabledPlugins.includes(t.plugin));
+    // A tool's plugin under its name from any marketplace, or under its name until 4 October 2026 from our own
+    // marketplaces only (a plugin called notify or glow from elsewhere is somebody else's).
+    tools[t.id].plugin = !!t.plugin && enabledPlugins.some(([name, market]) => name === t.plugin
+      || (!!t.oldPlugin && name === t.oldPlugin && (market === "claude-code-toolkit" || market === t.repo)));
   }
   return {
     configDir: cfg,

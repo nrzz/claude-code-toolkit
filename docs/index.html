@@ -213,7 +213,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
           <h3><a href="https://github.com/nrzz/claude-code-glow">Glow</a></h3>
           <p>14 themes that recolor the whole interface (and a classic one that keeps Claude's colors), a status line with a context meter and plan limits, and a live HUD with tips that help you spend fewer tokens.</p>
           <div class="tags"><span class="tag tokens">0 tokens</span><span class="tag">plugin</span><span class="tag">themes</span></div>
-          <div class="cmd"><code>/plugin install glow@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install glow@claude-code-toolkit">Copy</button></div>
+          <div class="cmd"><code>/plugin install glowline@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install glowline@claude-code-toolkit">Copy</button></div>
         </article>
         <article class="card">
           <h3><a href="https://github.com/nrzz/claude-code-guardrails">Guardrails</a></h3>
@@ -225,13 +225,13 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
           <h3><a href="https://github.com/nrzz/claude-code-notify">Notify</a></h3>
           <p>A ping when Claude needs you or finishes: terminal, desktop, phone through ntfy, Slack, Discord, Teams or your own command. Short turns stay quiet.</p>
           <div class="tags"><span class="tag tokens">0 tokens</span><span class="tag">plugin</span></div>
-          <div class="cmd"><code>/plugin install notify@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install notify@claude-code-toolkit">Copy</button></div>
+          <div class="cmd"><code>/plugin install nudge@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install nudge@claude-code-toolkit">Copy</button></div>
         </article>
         <article class="card">
           <h3><a href="https://github.com/nrzz/claude-cost-guard">Cost guard</a></h3>
           <p>Daily and weekly budgets counted from your local transcripts, warnings at 50%, 80% and 100%, and an optional hard stop that still lets <code>/compact</code> through.</p>
           <div class="tags"><span class="tag tokens">0 tokens</span><span class="tag">plugin</span><span class="tag">budgets</span></div>
-          <div class="cmd"><code>/plugin install cost-guard@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install cost-guard@claude-code-toolkit">Copy</button></div>
+          <div class="cmd"><code>/plugin install spendcap@claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin install spendcap@claude-code-toolkit">Copy</button></div>
         </article>
         <article class="card">
           <h3><a href="https://github.com/nrzz/claude-md-doctor">CLAUDE.md doctor</a></h3>
@@ -247,7 +247,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
         </article>
         <article class="card">
           <h3><a href="https://github.com/nrzz/claude-session-replay">Session replay</a></h3>
-          <p>Search everything you discussed in past sessions, and export one as a self-contained HTML replay or Markdown. <code>--redact</code> replaces secrets first, and the plugin's <code>/replay:replay</code> always uses it.</p>
+          <p>Search everything you discussed in past sessions, and export one as a self-contained HTML replay or Markdown. <code>--redact</code> replaces secrets first, and the plugin's <code>/replayer:replay</code> always uses it.</p>
           <div class="tags"><span class="tag tokens">0: runs outside Claude</span><span class="tag">CLI + plugin</span></div>
           <div class="cmd"><code>npx -y github:nrzz/claude-session-replay list</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-session-replay list">Copy</button></div>
         </article>
@@ -291,13 +291,15 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <div class="panel">
         <ul class="releases">
           <li><a href="https://github.com/nrzz/claude-code-team-sync/releases/tag/v1.2.1">team-sync <span class="v">v1.2.1</span></a><p>Privacy fixes: the session title and any tool input field named like a secret are now redacted before a session is shared, and an invalid settings file is left as it is.</p></li>
-          <li><a href="https://github.com/nrzz/claude-session-replay/releases/tag/v1.0.2">session-replay <span class="v">v1.0.2</span></a><p><code>--redact</code> also hides fields named like secrets, control characters are removed from names, titles and snippets, and the skill pre-approves only replay's own command.</p></li>
+          <li><a href="https://github.com/nrzz/claude-session-replay/releases/tag/v1.0.3">session-replay <span class="v">v1.0.3</span></a><p><code>--redact</code> also hides fields named like secrets, control characters are removed from names, titles and snippets, and the plugin is now called <code>replayer</code>.</p></li>
           <li><a href="https://github.com/nrzz/claude-code-handover/releases/tag/v1.4.1">handover <span class="v">v1.4.1</span></a><p>The guard's limit follows your context window setting, and <code>/recall</code> and the audit scripts follow <code>CLAUDE_CONFIG_DIR</code>.</p></li>
-          <li><a href="https://github.com/nrzz/claude-code-glow/releases/tag/v1.0.1">glow <span class="v">v1.0.1</span></a><p>The token doctor no longer counts user-only skills, which Claude Code leaves out of the model's skill list.</p></li>
+          <li><a href="https://github.com/nrzz/claude-code-glow/releases/tag/v1.0.2">glow <span class="v">v1.0.2</span></a><p>The token doctor no longer counts user-only skills, and the plugins are now called <code>glowline</code> and <code>glowbar</code>.</p></li>
+          <li><a href="https://github.com/nrzz/claude-code-notify/releases/tag/v1.0.1">notify <span class="v">v1.0.1</span></a><p>The plugin is now called <code>nudge</code>, and the README says exactly what a notification holds and where it goes.</p></li>
+          <li><a href="https://github.com/nrzz/claude-cost-guard/releases/tag/v1.0.1">cost-guard <span class="v">v1.0.1</span></a><p>The plugin is now called <code>spendcap</code>, and the README says what the index keeps.</p></li>
           <li><a href="https://github.com/nrzz/claude-code-guardrails/releases/tag/v1.0.2">guardrails <span class="v">v1.0.2</span></a><p><code>--dry-run</code> publishes now pass for poetry, uv, flit, hatch, vsce and ovsx too, and the two skills pre-approve only guardrails' own command instead of any <code>node</code> command.</p></li>
           <li><a href="https://github.com/nrzz/claude-md-doctor/releases/tag/v1.0.2">md-doctor <span class="v">v1.0.2</span></a><p>A short rule with real content, such as "Be careful with database migrations.", is no longer flagged as filler, and the skill pre-approves only md-doctor's own command.</p></li>
           <li><a href="https://github.com/nrzz/claude-code-starter-kits/releases/tag/v1.0.1">starter-kits <span class="v">v1.0.1</span></a><p>The <code>--list</code> columns fit their longest entry.</p></li>
-          <li><a href="https://github.com/nrzz/claude-code-toolkit/releases/tag/v1.1.1">toolkit <span class="v">v1.1.1</span></a><p>The end-to-end test with <code>--local</code> runs every check, and a run in which no check ran fails.</p></li>
+          <li><a href="https://github.com/nrzz/claude-code-toolkit/releases/tag/v1.1.2">toolkit <span class="v">v1.1.2</span></a><p>The marketplace lists the renamed plugins, and the end-to-end test with <code>--local</code> runs every check.</p></li>
         </ul>
       </div>
     </div>

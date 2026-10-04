@@ -52,7 +52,7 @@ test("after the first setup the switches show what is installed: a removed tool 
 });
 
 test("glow is not switched on over someone else's status line; plugins are recognised", () => {
-  const { env, project } = sandbox({ statusLine: { type: "command", command: "my-statusline.sh" }, enabledPlugins: { "guardrails@claude-code-toolkit": true, "notify@claude-code-toolkit": false } });
+  const { env, project } = sandbox({ statusLine: { type: "command", command: "my-statusline.sh" }, enabledPlugins: { "guardrails@claude-code-toolkit": true, "nudge@claude-code-toolkit": false } });
   const s = readState({ env, project });
   assert.equal(s.tools.glow.otherStatusLine, true);
   assert.equal(s.tools.guardrails.plugin, true);
@@ -60,6 +60,19 @@ test("glow is not switched on over someone else's status line; plugins are recog
   const c = defaultChoices(s);
   assert.equal(c.glow.enabled, false);
   assert.equal(c.guardrails.enabled, false, "left to /plugin");
+});
+
+test("a plugin under its new name counts from any marketplace, under its old name only from ours", () => {
+  const plugged = (key) => readState({ ...sandbox({ enabledPlugins: { [key]: true } }) });
+  assert.equal(plugged("nudge@claude-code-toolkit").tools.notify.plugin, true);
+  assert.equal(plugged("nudge@elsewhere").tools.notify.plugin, true);
+  assert.equal(plugged("notify@claude-code-toolkit").tools.notify.plugin, true, "the old name from the toolkit's marketplace");
+  assert.equal(plugged("notify@claude-code-notify").tools.notify.plugin, true, "the old name from the tool's own marketplace");
+  assert.equal(plugged("notify@elsewhere").tools.notify.plugin, false, "somebody else's plugin called notify");
+  assert.equal(plugged("glow@claude-code-glow").tools.glow.plugin, true);
+  assert.equal(plugged("glowline@claude-code-toolkit").tools.glow.plugin, true);
+  assert.equal(plugged("cost-guard@elsewhere").tools["cost-guard"].plugin, false);
+  assert.equal(plugged("spendcap@claude-cost-guard").tools["cost-guard"].plugin, true);
 });
 
 test("project tools are read from the project folder; git and its remote are noticed", () => {

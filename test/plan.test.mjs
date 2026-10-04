@@ -70,7 +70,7 @@ test("problems are reported before anything runs", () => {
 });
 
 test("a project tool already set up, or a tool installed as a plugin, is left alone", () => {
-  const { env, project } = sandbox({ enabledPlugins: { "notify@claude-code-toolkit": true } });
+  const { env, project } = sandbox({ enabledPlugins: { "nudge@claude-code-toolkit": true } });
   spawnSync("git", ["init", "-q"], { cwd: project });
   writeJson(path.join(project, ".claude", "agents", "test-runner.md"), {});
   const s = readState({ env, project });

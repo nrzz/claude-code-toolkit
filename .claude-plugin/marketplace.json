@@ -7,8 +7,8 @@
   },
   "plugins": [
     {
-      "name": "glow",
-      "description": "A status line with a live context meter, plan limits and zero-token tips in 15 themes, 14 of which also recolor the whole Claude Code interface (pick them in /theme), plus /glow:setup, /glow:theme and /glow:doctor.",
+      "name": "glowline",
+      "description": "A status line with a live context meter, plan limits and zero-token tips in 15 themes, 14 of which also recolor the whole Claude Code interface (pick them in /theme), plus /glowline:setup, /glowline:theme and /glowline:doctor.",
       "author": {
         "name": "Naresh Prabu"
       },
@@ -20,7 +20,7 @@
       "homepage": "https://github.com/nrzz/claude-code-glow"
     },
     {
-      "name": "glow-hud",
+      "name": "glowbar",
       "description": "Early access: a themed bar above the prompt with a live context meter, plan limits, session cost, a token-saving tip and one-key Compact and Theme buttons, plus a /glow theme picker. Terminal and desktop app. Needs Claude Code 2.1.286 or newer.",
       "author": {
         "name": "Naresh Prabu"
@@ -47,7 +47,7 @@
       "homepage": "https://github.com/nrzz/claude-code-guardrails"
     },
     {
-      "name": "notify",
+      "name": "nudge",
       "description": "A ping when Claude Code needs you or finishes, so you can look away while it works. Terminal, desktop, phone (ntfy), Slack, Discord, Teams or your own command. The hooks print nothing the model reads: 0 tokens.",
       "author": {
         "name": "Naresh Prabu"
@@ -60,7 +60,7 @@
       "homepage": "https://github.com/nrzz/claude-code-notify"
     },
     {
-      "name": "cost-guard",
+      "name": "spendcap",
       "description": "A hook that checks your spending against daily and weekly budgets before every prompt: a warning line (shown to you, never sent to the model) at 50%, 80% and 100%, and in hard mode a block once the budget is used. Costs no tokens.",
       "author": {
         "name": "Naresh Prabu"
@@ -86,8 +86,8 @@
       "homepage": "https://github.com/nrzz/claude-md-doctor"
     },
     {
-      "name": "replay",
-      "description": "Export this session as a self-contained HTML replay with secrets redacted (/replay:replay). The claude-replay command also searches, lists and exports any past session, at no token cost.",
+      "name": "replayer",
+      "description": "Export this session as a self-contained HTML replay with secrets redacted (/replayer:replay). The claude-replay command also searches, lists and exports any past session, at no token cost.",
       "author": {
         "name": "Naresh Prabu"
       },

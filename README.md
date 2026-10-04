@@ -55,15 +55,17 @@ Then install any of the others the same way, or browse them with `/plugin`:
 
 | Plugin | Install |
 | --- | --- |
-| Glow: themes and status line | `/plugin install glow@claude-code-toolkit` |
-| Glow HUD (early access) | `/plugin install glow-hud@claude-code-toolkit` |
+| Glow: themes and status line | `/plugin install glowline@claude-code-toolkit` |
+| Glow HUD (early access) | `/plugin install glowbar@claude-code-toolkit` |
 | Guardrails | `/plugin install guardrails@claude-code-toolkit` |
-| Notify | `/plugin install notify@claude-code-toolkit` |
-| Cost guard | `/plugin install cost-guard@claude-code-toolkit` |
+| Notify | `/plugin install nudge@claude-code-toolkit` |
+| Cost guard | `/plugin install spendcap@claude-code-toolkit` |
 | CLAUDE.md doctor | `/plugin install md-doctor@claude-code-toolkit` |
-| Session replay | `/plugin install replay@claude-code-toolkit` |
+| Session replay | `/plugin install replayer@claude-code-toolkit` |
 
-By Claude Code's own estimate (`claude plugin details`), all seven together add about 91 always-on tokens, and only because the estimate counts the descriptions of user-only skills, which Claude Code leaves out of the list it gives the model.
+Five plugins were renamed on 4 October 2026 so that each has a name of its own in Anthropic's plugin directory: `glow` is now `glowline`, `glow-hud` is `glowbar`, `notify` is `nudge`, `cost-guard` is `spendcap` and `replay` is `replayer`. If you installed one under its old name, uninstall it and install the new one; the tools, their commands and your settings are unchanged.
+
+By Claude Code's own estimate (`claude plugin details`), all seven together add about 95 always-on tokens, and only because the estimate counts the descriptions of user-only skills, which Claude Code leaves out of the list it gives the model.
 
 ### One tool at a time
 

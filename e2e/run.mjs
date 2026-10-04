@@ -298,10 +298,10 @@ if (want("marketplace")) {
     check("marketplace", "the guardrails plugin's own hook denies rm -rf /", parse(denied.out)?.hookSpecificOutput?.permissionDecision === "deny", denied.out + denied.err);
     const allowed = pluginHook("guardrails@claude-code-toolkit", "PreToolUse", { tool_name: "Bash", tool_input: { command: "npm test" } });
     check("marketplace", "the guardrails plugin's own hook passes npm test in silence", allowed.code === 0 && allowed.out.trim() === "", allowed.out + allowed.err);
-    const ping = pluginHook("notify@claude-code-toolkit", "Notification", { message: "Claude needs your permission to use Bash", notification_type: "permission_prompt" });
-    check("marketplace", "the notify plugin's own hook pings on a permission prompt", /permission/.test(parse(ping.out)?.terminalSequence || ""), ping.out + ping.err);
-    const budget = pluginHook("cost-guard@claude-code-toolkit", "UserPromptSubmit", { prompt: "hi", source: "user" });
-    check("marketplace", "the cost-guard plugin's own hook runs, silent with no budget", budget.code === 0 && budget.out.trim() === "", budget.out + budget.err);
+    const ping = pluginHook("nudge@claude-code-toolkit", "Notification", { message: "Claude needs your permission to use Bash", notification_type: "permission_prompt" });
+    check("marketplace", "the nudge plugin's (notify's) own hook pings on a permission prompt", /permission/.test(parse(ping.out)?.terminalSequence || ""), ping.out + ping.err);
+    const budget = pluginHook("spendcap@claude-code-toolkit", "UserPromptSubmit", { prompt: "hi", source: "user" });
+    check("marketplace", "the spendcap plugin's (cost guard's) own hook runs, silent with no budget", budget.code === 0 && budget.out.trim() === "", budget.out + budget.err);
     let total = 0;
     for (const name of names) {
       const d = claude(["plugin", "details", `${name}@claude-code-toolkit`]);
@@ -309,12 +309,12 @@ if (want("marketplace")) {
       total += m ? Number(m[1]) : 1000;
     }
     check("marketplace", `all plugins together: about ${total} always-on tokens, by Claude Code's own estimate (limit 150)`, total < 150, String(total));
-    const hud = list.find((p) => p.id === "glow-hud@claude-code-toolkit");
+    const hud = list.find((p) => p.id === "glowbar@claude-code-toolkit");
     if (hud) {
       const t = claude(["plugin", "test", hud.installPath], 300000);
       const lines = (t.out + t.err).split("\n");
       const failed = lines.flatMap((l, i) => (/\(fail\)/.test(l) ? lines.slice(i, i + 4) : [])).join("\n");
-      check("marketplace", "glow-hud's engine tests pass in this Claude Code", t.code === 0 && /\b0 fail/.test(t.out + t.err), failed || (t.out + t.err).slice(-400));
+      check("marketplace", "glowbar's engine tests (the glow HUD) pass in this Claude Code", t.code === 0 && /\b0 fail/.test(t.out + t.err), failed || (t.out + t.err).slice(-400));
     }
   }
 }
