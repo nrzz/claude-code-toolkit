@@ -338,7 +338,10 @@ if (want("setup")) {
     check("setup", "the page refuses a request without the key", (await api("/api/state").then(() => fetch(`${u.origin}/api/state`))).status === 403);
     let state = null;
     for (let i = 0; i < 120 && !state?.ready; i++) { state = await (await api("/api/state")).json(); if (!state.ready) await new Promise((r) => setTimeout(r, 500)); }
-    check("setup", "it fetched all nine tools and sees what is installed", state?.ready && state.failed.length === 0 && state.tools.filter((t) => t.installed).length === 4 && state.glowThemes.length >= 15, JSON.stringify(state?.failed));
+    // The four installed above; project tools depend on what earlier sections left in the project.
+    const userInstalled = (state?.tools || []).filter((t) => t.scope === "user" && t.installed).map((t) => t.id);
+    check("setup", "it fetched all nine tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
+      JSON.stringify({ failed: state?.failed, userInstalled, glowThemes: state?.glowThemes?.length }));
     const applied = await (await api("/api/apply", { choices: { glow: { enabled: true, options: { theme: "nord", icons: "unicode", uiTheme: true } }, notify: { enabled: false } } })).text();
     const last = parse(applied.trim().split("\n").pop());
     const glowCfg = parse(fs.readFileSync(path.join(sCfg, "claude-code-glow", "config.json"), "utf8"));
