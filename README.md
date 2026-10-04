@@ -14,6 +14,8 @@ npx -y github:nrzz/claude-code-toolkit
 
 That opens a setup page in your browser. The first time, the recommended tools (guardrails, notify and glow) are already switched on, so pressing **Install** is the whole setup. Each tool's **Settings** hold the few choices that need you: the glow theme (shown with its colors), the guardrails preset, where notify reaches you (desktop, phone, Slack, Discord or Teams), cost guard's budgets and, for the project you ran it in, the handover files, team sync's hub and a starter kit you can preview before it writes anything. Run it again any time to change a setting or switch a tool off; it shows what is installed and how it is set.
 
+![The setup page: guardrails, notify and glow already switched on, each with its token cost and settings, and one Install button](docs/setup-page.png)
+
 The page is served by the command itself on 127.0.0.1, with a one-time key in its link, and only runs each tool's own installer, which backs up `settings.json` first. It stops when you press **Done**. Where no browser can open (over SSH, in a container) it asks the same questions in the terminal, and for scripts there is no question at all:
 
 ```bash
