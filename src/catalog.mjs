@@ -187,7 +187,7 @@ export const TOOLS = [
   {
     id: "replay", repo: "claude-session-replay", bin: "bin/claude-replay.mjs", scope: "action",
     name: "Session replay", tokens: "0: runs outside Claude",
-    summary: "Search everything you discussed in past sessions, and export one as a self-contained HTML page or Markdown, with secrets redacted.",
+    summary: "Search everything you discussed in past sessions, and export one as a self-contained HTML page or Markdown; --redact replaces secrets first.",
     defaults: {},
     validate: () => ({}),
     actions: { list: { label: "This project's sessions", args: (o, ctx) => ["list", "--project", ctx.project] } },
