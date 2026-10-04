@@ -57,7 +57,7 @@ body:
     attributes:
       label: How did you install it?
       options:
-        - npx from GitHub
+        - The setup page (npx -y github:nrzz/claude-code-toolkit)
         - Claude Code plugin marketplace
         - git clone
         - Other

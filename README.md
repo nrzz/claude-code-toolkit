@@ -20,13 +20,13 @@ The page is served by the command itself on 127.0.0.1, with a one-time key in it
 npx -y github:nrzz/claude-code-toolkit install recommended --theme nord --daily 20usd
 ```
 
-`status` shows what is installed, `uninstall all` takes everything out again, and `--help` lists every option. Nothing here runs Claude, so setting up costs no tokens.
+`status` shows what is installed, `uninstall all` takes out what the tools added to your Claude Code settings (handover keeps your project notes and the effort defaults it set, and says so), and `--help` lists every option. Nothing here runs Claude, so setting up costs no tokens.
 
 ## Pick what you need
 
 | You want to | Use | What it adds to a session |
 | --- | --- | --- |
-| Stop paying to reload one giant chat | [claude-code-handover](https://github.com/nrzz/claude-code-handover) | A short handover file, and a few recalled lines when your question matches an earlier session |
+| Stop paying to reload one giant chat | [claude-code-handover](https://github.com/nrzz/claude-code-handover) | About 700 tokens when new (your rules, the handover file and the latest decisions; the handover stays under 120 lines), and 110 to 200 more on a prompt that matches an earlier session |
 | Share sessions, notes and context with coworkers | [claude-code-team-sync](https://github.com/nrzz/claude-code-team-sync) | 0 when nothing is new, at most about 375 tokens when a teammate shared something |
 | Theme the whole interface and watch your context, limits and cost | [claude-code-glow](https://github.com/nrzz/claude-code-glow) | 0 |
 | Stop `rm -rf /`, force pushes, secrets in commits and `.env` edits | [claude-code-guardrails](https://github.com/nrzz/claude-code-guardrails) | 0 for every allowed call, about 45 tokens for a denied one |
@@ -91,14 +91,14 @@ npx -y github:nrzz/claude-session-replay list
 npx -y github:nrzz/claude-code-glow install
 ```
 
-Guardrails, notify and cost guard have the same `init`; handover's and team sync's run in the project folder. Every tool that changes your settings has an `uninstall` that takes out what it added.
+Guardrails, notify and cost guard have the same `init`; handover's and team sync's run in the project folder. Every tool that changes your Claude Code settings has an `uninstall` that takes out what it added; team sync and the starter kits write files into the project, which you commit or delete like any other.
 
 ## Built the same way
 
 - **No dependencies.** Node 18 or newer and nothing from npm, so there is nothing to audit but the code itself.
-- **Token cost is a feature.** Hooks talk to you, not to the model. Skills that Claude does not need to see are user-only. Every README says what each part costs.
-- **Your settings stay yours.** Each tool backs up before writing, changes only its own keys, leaves a file that is not valid JSON alone, and uninstalls cleanly.
-- **Tested.** Over 2,900 automated tests across the nine repositories, each run on Windows, macOS and Linux with Node 20, 22 and 24, and the end-to-end run below.
+- **Token cost is a feature.** A hook puts text in front of the model only when that is its job (a recalled line, a teammate's news, the reason a command was stopped), and the README says how much. Everything else talks to you, not to the model. Skills that Claude does not need to see are user-only.
+- **Your settings stay yours.** Each tool backs up `settings.json` before writing, changes only the keys it is there for, leaves a file that is not valid JSON alone, and its `uninstall` takes out what it added (handover keeps the effort defaults it set, and says so).
+- **Tested.** Over 3,200 automated tests across the nine repositories, each run on Windows, macOS and Linux with Node 20, 22 and 24, and on Linux with Node 18, plus the end-to-end run below.
 
 ## Tested together
 
@@ -118,7 +118,7 @@ node e2e/run.mjs
 
 ## Contributing
 
-Every tool welcomes issues and pull requests: each repository has a CONTRIBUTING.md, issue templates and issues labelled [good first issue](https://github.com/search?q=user%3Anrzz+label%3A%22good+first+issue%22+state%3Aopen&type=issues). For the marketplace, the website or the end-to-end test, see [CONTRIBUTING.md](CONTRIBUTING.md). Questions and ideas for new tools go to [Discussions](https://github.com/nrzz/claude-code-toolkit/discussions).
+Every tool welcomes issues and pull requests: each repository has a CONTRIBUTING.md and issue templates, and there are issues labelled [good first issue](https://github.com/search?q=user%3Anrzz+label%3A%22good+first+issue%22+state%3Aopen&type=issues) and [help wanted](https://github.com/search?q=user%3Anrzz+label%3A%22help+wanted%22+state%3Aopen&type=issues) to start with. For the marketplace, the website or the end-to-end test, see [CONTRIBUTING.md](CONTRIBUTING.md). Questions and ideas for new tools go to [Discussions](https://github.com/nrzz/claude-code-toolkit/discussions).
 
 ## License
 

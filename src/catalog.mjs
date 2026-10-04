@@ -92,7 +92,7 @@ export const TOOLS = [
   {
     id: "glow", repo: "claude-code-glow", bin: "bin/claude-glow.mjs", scope: "user", plugin: "glow",
     name: "Glow", tokens: "0",
-    summary: "15 color themes for the whole interface, and a status line with a context meter, plan limits, cost and token-saving tips.",
+    summary: "14 color themes for the whole interface (plus classic, which keeps Claude's colors), and a status line with a context meter, plan limits, cost and token-saving tips.",
     recommended: true,
     defaults: { theme: "classic", icons: "unicode", uiTheme: true },
     validate(o, ctx = {}) {

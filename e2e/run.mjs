@@ -18,7 +18,8 @@ import { fileURLToPath } from "node:url";
 
 const args = process.argv.slice(2);
 const LOCAL = args.includes("--local");
-const only = (args[args.indexOf("--only") + 1] || "").split(",").filter(Boolean);
+const onlyAt = args.indexOf("--only");
+const only = onlyAt >= 0 ? (args[onlyAt + 1] || "").split(",").filter(Boolean) : [];
 const want = (name) => !only.length || only.includes(name);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SIBLINGS = path.resolve(HERE, "..", "..");
@@ -404,6 +405,11 @@ if (!only.length) {
 
 // ---- report ---------------------------------------------------------------------------------------
 const failed = results.filter((r) => !r.ok);
-console.log(`\n${results.length - failed.length} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map((f) => `${f.area}: ${f.what}`).join("; ")}` : ""}.`);
+// A run that checked nothing is not a pass (a wrong --only once made every section skip).
+if (!results.length) failed.push({ area: "e2e", what: `no checks ran${only.length ? ` for --only ${only.join(",")}` : ""}` });
+const passed = results.filter((r) => r.ok).length;
+console.log(results.length
+  ? `\n${passed} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map((f) => `${f.area}: ${f.what}`).join("; ")}` : ""}.`
+  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
 if (!args.includes("--keep")) fs.rmSync(base, { recursive: true, force: true });
 process.exitCode = failed.length ? 1 : 0;

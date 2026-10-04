@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "glow",
-      "description": "15 color themes for the whole Claude Code interface (pick them in /theme), a themed status line with a live context meter, plan limits and zero-token tips, and /glow:setup, /glow:theme and /glow:doctor.",
+      "description": "A status line with a live context meter, plan limits and zero-token tips in 15 themes, 14 of which also recolor the whole Claude Code interface (pick them in /theme), plus /glow:setup, /glow:theme and /glow:doctor.",
       "author": {
         "name": "Naresh Prabu"
       },
