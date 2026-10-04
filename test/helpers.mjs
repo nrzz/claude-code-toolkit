@@ -5,7 +5,19 @@ import os from "node:os";
 import path from "node:path";
 import { TOOLS } from "../src/catalog.mjs";
 
-export const tmp = (prefix = "tk-test-") => fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), prefix)));
+// Every folder made here is removed when the test process exits, so a run leaves nothing in the temp folder.
+const made = [];
+process.on("exit", () => {
+  for (const dir of made) {
+    try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }); } catch { /* a child may still hold a file; the OS cleans the temp folder later */ }
+  }
+});
+
+export const tmp = (prefix = "tk-test-") => {
+  const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), prefix)));
+  made.push(dir);
+  return dir;
+};
 
 /** A home folder with a .claude config inside, and the environment that points at it. */
 export function sandbox(settings = { theme: "dark" }) {
