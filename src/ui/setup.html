@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Claude Code toolkit setup</title>
+<style nonce="__NONCE__">
+:root {
+  --bg: #faf9f5; --surface: #ffffff; --surface-2: #f3f1ea; --text: #1f1e1d; --muted: #5e5d59; --border: #e3e0d6;
+  --accent: #c4623f; --accent-text: #ffffff; --ok: #2f7d4f; --ok-soft: #e1f1e7; --bad: #b3261e; --bad-soft: #fbe5e3;
+  --warn: #8a5a00; --warn-soft: #fbf0d9; --shadow: 0 1px 2px rgba(31,30,29,.06), 0 4px 16px rgba(31,30,29,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1918; --surface: #232220; --surface-2: #2b2a27; --text: #ecebe7; --muted: #a8a69f; --border: #3a3935;
+    --accent: #e08a68; --accent-text: #1a1918; --ok: #6fcf97; --ok-soft: #1f3328; --bad: #f2a29b; --bad-soft: #3a2220;
+    --warn: #f0c36a; --warn-soft: #3a3020; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.2);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; padding-bottom: 96px; }
+code, pre, input.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+header.top { border-bottom: 1px solid var(--border); }
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 650; }
+.cfg { color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
+.hero { padding: 28px 0 8px; }
+.hero h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); line-height: 1.15; margin: 0 0 10px; letter-spacing: -.01em; }
+.lead { color: var(--muted); margin: 0 0 14px; max-width: 70ch; }
+.notice { border-radius: 10px; padding: 10px 14px; margin: 8px 0; background: var(--surface-2); border: 1px solid var(--border); }
+.notice.bad { background: var(--bad-soft); border-color: transparent; color: var(--bad); }
+.notice.warn { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+.notice ul { margin: 4px 0 0; padding-left: 1.2em; }
+.group { padding: 18px 0 4px; }
+.group h2 { font-size: 1.15rem; margin: 0 0 4px; }
+.group > p.hint { color: var(--muted); margin: 0 0 12px; font-size: .92rem; }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card.on { border-color: var(--accent); }
+.card-head { display: flex; align-items: center; gap: 12px; }
+.card-head .titles { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.card h3 { margin: 0; font-size: 1.02rem; }
+.pill { font-size: .72rem; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.pill.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.tokens { font-size: .75rem; color: var(--ok); white-space: nowrap; }
+.summary { margin: 0; color: var(--muted); font-size: .93rem; }
+.note { margin: 0; font-size: .85rem; color: var(--warn); }
+.switch { position: relative; width: 42px; height: 24px; flex: none; }
+.switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+.switch .slider { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background .15s; }
+.switch .slider::after { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.switch input:checked + .slider { background: var(--accent); }
+.switch input:checked + .slider::after { transform: translateX(18px); }
+.switch input:disabled { cursor: not-allowed; }
+.switch input:disabled + .slider { opacity: .55; }
+.switch input:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.settings { border-top: 1px solid var(--border); padding-top: 8px; }
+details.settings > summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; list-style: none; }
+details.settings > summary::-webkit-details-marker { display: none; }
+details.settings > summary::before { content: "\25B8  "; }
+details.settings[open] > summary::before { content: "\25BE  "; }
+.fields { display: grid; gap: 12px; margin-top: 10px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > span, fieldset > legend { font-weight: 600; font-size: .88rem; }
+.field small, fieldset small { color: var(--muted); font-size: .8rem; }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; min-width: 0; }
+.choice { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; }
+.choice input { margin-top: 3px; }
+input[type=text], input[type=number], select { width: 100%; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; min-width: 0; }
+input.mono { font-size: .85rem; }
+.themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+.theme { position: relative; border: 1px solid var(--border); border-radius: 10px; padding: 8px; cursor: pointer; display: grid; gap: 6px; background: var(--bg); }
+.theme input { position: absolute; opacity: 0; }
+.theme.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.theme:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.theme .name { font-size: .8rem; font-weight: 600; }
+.sw { display: flex; gap: 3px; }
+.sw i { display: block; height: 14px; flex: 1; border-radius: 3px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+button { font: inherit; cursor: pointer; border-radius: 9px; padding: 7px 14px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .55; cursor: not-allowed; }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; font-weight: 650; padding: 9px 22px; }
+button.small { font-size: .82rem; padding: 4px 10px; }
+.project { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0 6px; }
+.project input { flex: 1 1 260px; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--border); box-shadow: 0 -4px 16px rgba(0,0,0,.06); }
+.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 68px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+.bar .summary-text { color: var(--muted); font-size: .92rem; }
+.bar .summary-text b { color: var(--text); }
+.bar-actions { display: flex; gap: 8px; }
+#progress { padding: 18px 0; }
+#progress h2 { font-size: 1.15rem; margin: 0 0 10px; }
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+ol.steps li { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+ol.steps .row { display: flex; gap: 10px; align-items: center; }
+ol.steps .mark { width: 1.3em; text-align: center; font-weight: 700; }
+ol.steps .running .mark { color: var(--accent); }
+ol.steps .ok .mark { color: var(--ok); }
+ol.steps .failed .mark, ol.steps .failed .label { color: var(--bad); }
+ol.steps .skipped { opacity: .6; }
+pre { background: var(--surface-2); border-radius: 8px; padding: 10px; overflow: auto; max-height: 340px; font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0 0; }
+dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); width: min(820px, calc(100vw - 32px)); padding: 18px; box-shadow: var(--shadow); }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog h3 { margin: 0 0 8px; }
+dialog pre { max-height: 60vh; }
+dialog .actions { justify-content: flex-end; margin-top: 12px; }
+.finished { text-align: center; padding: 80px 16px; }
+@media (max-width: 760px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#d97757"/><path d="M9 11l6 5-6 5M17 22h7" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Claude Code toolkit
+    </div>
+    <span class="cfg" id="cfg"></span>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <section class="hero">
+    <h1>Set up Claude Code in one click</h1>
+    <p class="lead">Switch tools on or off and press Install; the first time, the recommended ones are already on. Each tool's Settings are optional. Everything runs on this computer and changes only your Claude Code settings and the project folder below; nothing here is sent to Claude.</p>
+    <div class="notice" id="loading" role="status">Getting the latest tools from GitHub...</div>
+    <div class="notice bad" id="problems" role="alert" hidden></div>
+    <div class="notice warn" id="notes" hidden></div>
+  </section>
+
+  <section class="group">
+    <h2>For you, in every project</h2>
+    <p class="hint">Hooks in your Claude Code settings. Switch one off to remove it.</p>
+    <div class="cards" id="cards-user"></div>
+  </section>
+
+  <section class="group">
+    <h2>For this project</h2>
+    <form class="project" id="project-form">
+      <label for="project">Project folder</label>
+      <input type="text" id="project" class="mono" autocomplete="off" spellcheck="false">
+      <button type="submit" class="small">Use this folder</button>
+    </form>
+    <p class="hint" id="project-hint"></p>
+    <div class="cards" id="cards-project"></div>
+  </section>
+
+  <section class="group">
+    <h2>Run now</h2>
+    <p class="hint">Nothing to install: these read your files and show the result here.</p>
+    <div class="cards" id="cards-action"></div>
+  </section>
+
+  <section id="progress" hidden>
+    <h2 id="progress-title">Applying</h2>
+    <ol class="steps" id="steps"></ol>
+    <div id="result"></div>
+  </section>
+</main>
+
+<div class="bar">
+  <div class="wrap">
+    <span class="summary-text" id="summary" aria-live="polite"></span>
+    <div class="bar-actions">
+      <button type="button" id="done">Done</button>
+      <button type="button" id="apply" class="primary" disabled>Install</button>
+    </div>
+  </div>
+</div>
+
+<dialog id="dialog">
+  <h3 id="dialog-title"></h3>
+  <pre id="dialog-text"></pre>
+  <div class="actions"><button type="button" id="dialog-close">Close</button></div>
+</dialog>
+
+<script nonce="__NONCE__">
+"use strict";
+const TOKEN = new URLSearchParams(location.search).get("t") || "";
+const $ = (id) => document.getElementById(id);
+let S = null;          // the server's state
+let choices = {};      // id -> { enabled, options }
+let applying = false;
+const openSettings = new Set();
+
+function api(path, body) {
+  return fetch(path, {
+    method: body === undefined ? "GET" : "POST",
+    headers: Object.assign({ "x-toolkit-token": TOKEN }, body === undefined ? {} : { "content-type": "application/json" }),
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+
+function el(tag, attrs, ...kids) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v === undefined || v === null || v === false) continue;
+    if (k === "class") node.className = v;
+    else if (k === "text") node.textContent = v;
+    else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+    else if (v === true) node.setAttribute(k, "");
+    else node.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid !== null && kid !== undefined && kid !== false) node.append(kid);
+  return node;
+}
+
+const toolOf = (id) => S.tools.find((t) => t.id === id);
+const opt = (id) => choices[id].options;
+const setOpt = (id, key, value) => { choices[id].options[key] = value; summarize(); };
+
+// ---------------------------------------------------------------------------------------------
+// Settings for each tool
+// ---------------------------------------------------------------------------------------------
+function radios(id, key, list, legend) {
+  const name = `${id}-${key}`;
+  return el("fieldset", {}, el("legend", { text: legend }),
+    list.map(([value, label, help]) => el("label", { class: "choice" },
+      el("input", { type: "radio", name, value, checked: opt(id)[key] === value, onchange: () => setOpt(id, key, value) }),
+      el("span", {}, label, help ? el("small", { text: ` ${help}` }) : null))));
+}
+function textField(id, key, label, help, attrs = {}) {
+  const input = el("input", Object.assign({ type: "text", value: opt(id)[key] ?? "", spellcheck: "false", autocomplete: "off", oninput: (e) => setOpt(id, key, e.target.value) }, attrs));
+  return el("label", { class: "field" }, el("span", { text: label }), input, help ? el("small", { text: help }) : null);
+}
+function check(id, key, label, help) {
+  return el("label", { class: "choice" },
+    el("input", { type: "checkbox", checked: !!opt(id)[key], onchange: (e) => setOpt(id, key, e.target.checked) }),
+    el("span", {}, label, help ? el("small", { text: ` ${help}` }) : null));
+}
+function secret(id, key, label, current) {
+  const help = current ? `${current}. Leave empty to keep it, or type off to remove it.` : "Paste the incoming webhook URL (https://...).";
+  return textField(id, key, label, help, { class: "mono", placeholder: current ? "(kept)" : "https://", value: "" });
+}
+
+const SETTINGS = {
+  guardrails: (t) => [radios("guardrails", "preset", [
+    ["balanced", "Balanced", "(recommended) denies the dangerous, asks before what loses work: force pushes, hard resets, publishes."],
+    ["strict", "Strict", "also asks before direct pushes to protected branches and more."],
+    ["relaxed", "Relaxed", "denies only the dangerous: root deletes, disk wipes, secrets."],
+  ], "Preset")],
+  notify: (t) => {
+    const ntfyMode = opt("notify").ntfyMode || (t.current.ntfy ? "keep" : "off");
+    choices.notify.options.ntfyMode = ntfyMode;
+    const topic = el("input", { type: "text", class: "mono", placeholder: "my-private-topic", value: "", hidden: ntfyMode !== "topic",
+      oninput: (e) => setOpt("notify", "ntfy", e.target.value) });
+    const sync = (mode) => {
+      choices.notify.options.ntfyMode = mode;
+      topic.hidden = mode !== "topic";
+      setOpt("notify", "ntfy", mode === "auto" ? "auto" : mode === "off" ? "off" : mode === "keep" ? "" : topic.value);
+    };
+    const modes = [["off", "Off"], ["auto", "Make a private topic for me"], ["topic", "Use my topic"]];
+    if (t.current.ntfy) modes.unshift(["keep", `Keep my topic (${t.current.ntfy})`]);
+    return [
+      check("notify", "desktop", "Desktop notifications", "a toast from your system, besides the terminal's own."),
+      el("fieldset", {}, el("legend", { text: "Phone (ntfy app)" }),
+        modes.map(([value, label]) => el("label", { class: "choice" },
+          el("input", { type: "radio", name: "notify-ntfy", value, checked: ntfyMode === value, onchange: () => sync(value) }), el("span", { text: label }))),
+        topic, el("small", { text: "Install the free ntfy app and subscribe to the topic; anyone who knows it can read the pings, so keep it unguessable." })),
+      secret("notify", "slack", "Slack webhook", t.current.slack),
+      secret("notify", "discord", "Discord webhook", t.current.discord),
+      secret("notify", "teams", "Microsoft Teams webhook", t.current.teams),
+      textField("notify", "quiet", "Quiet hours", t.current.quiet ? `Now ${t.current.quiet}. Leave as is, change it, or type off.` : "For example 22:00-07:00. Leave empty for none.", { placeholder: "22:00-07:00" }),
+      el("label", { class: "field" }, el("span", { text: "Only after turns longer than (seconds)" }),
+        el("input", { type: "number", min: "0", max: "3600", value: String(opt("notify").minTurnSeconds ?? 30), oninput: (e) => setOpt("notify", "minTurnSeconds", e.target.value === "" ? "" : Number(e.target.value)) })),
+    ];
+  },
+  glow: (t) => {
+    const grid = el("div", { class: "themes", role: "radiogroup", "aria-label": "Theme" });
+    const themes = S.glowThemes.length ? S.glowThemes : [{ slug: "classic", name: "Classic", swatches: [] }];
+    for (const th of themes) {
+      const tile = el("label", { class: `theme${opt("glow").theme === th.slug ? " sel" : ""}`, title: th.name },
+        el("input", { type: "radio", name: "glow-theme", value: th.slug, checked: opt("glow").theme === th.slug, onchange: () => {
+          setOpt("glow", "theme", th.slug);
+          for (const x of grid.children) x.classList.toggle("sel", x.querySelector("input").value === th.slug);
+        } }),
+        el("span", { class: "name", text: th.name }));
+      const sw = el("span", { class: "sw" });
+      for (const c of th.swatches || []) { const i = el("i"); i.style.background = c; sw.append(i); }
+      tile.append(sw);
+      grid.append(tile);
+    }
+    const icons = el("select", { onchange: (e) => setOpt("glow", "icons", e.target.value) },
+      [["unicode", "Symbols that every font has"], ["nerd", "Nerd Font icons (needs a Nerd Font)"], ["ascii", "Plain ASCII"]]
+        .map(([v, l]) => el("option", { value: v, selected: opt("glow").icons === v, text: l })));
+    return [
+      el("fieldset", {}, el("legend", { text: "Theme" }), grid),
+      el("label", { class: "field" }, el("span", { text: "Icons" }), icons),
+      check("glow", "uiTheme", "Recolor the whole Claude Code interface", "(pick \u201cGlow (live)\u201d in /theme once). Off: only the status line changes."),
+      t.otherStatusLine && !t.installed ? el("p", { class: "note", text: "You already have a status line. Glow replaces it, and puts it back if you remove Glow." }) : null,
+    ];
+  },
+  "cost-guard": () => [
+    textField("cost-guard", "daily", "Daily budget", "In dollars at API list prices (20usd or $20) or in tokens (3M). Empty: none.", { class: "mono", placeholder: "20usd" }),
+    textField("cost-guard", "weekly", "Weekly budget", "Empty: none.", { class: "mono", placeholder: "80usd" }),
+    radios("cost-guard", "mode", [["soft", "Warn me", "at 50%, 80% and 100% (shown to you, never sent to Claude)."], ["hard", "Warn, then stop", "new prompts at 100%. /compact still works."]], "When a budget runs out"),
+  ],
+  handover: () => {
+    const models = el("select", { onchange: (e) => setOpt("handover", "models", e.target.value) },
+      ["Opus + Sonnet", "Opus only", "Sonnet only", "Fable + Opus + Sonnet", "Opus + Haiku"].map((m) => el("option", { value: m, selected: opt("handover").models === m, text: m })));
+    return [
+      el("label", { class: "field" }, el("span", { text: "Models in your model picker" }), models, el("small", { text: "Sets the effort defaults and the rules card to match." })),
+      textField("handover", "streams", "Work streams", "One section each in HANDOVER.md, for example: backend, frontend."),
+    ];
+  },
+  "team-sync": (t) => {
+    const mode = opt("team-sync").hubMode || "branch";
+    choices["team-sync"].options.hubMode = mode;
+    const url = el("input", { type: "text", class: "mono", placeholder: "https://github.com/acme/claude-hub.git", hidden: mode !== "git", oninput: (e) => setOpt("team-sync", "hub", e.target.value) });
+    const folder = el("input", { type: "text", class: "mono", placeholder: "C:\\Users\\me\\OneDrive - Acme\\Claude Hub", hidden: mode !== "folder", oninput: (e) => setOpt("team-sync", "hub", e.target.value) });
+    const pick = (m) => { choices["team-sync"].options.hubMode = m; url.hidden = m !== "git"; folder.hidden = m !== "folder"; setOpt("team-sync", "hub", m === "branch" ? "branch" : m === "git" ? url.value : folder.value); };
+    return [
+      el("fieldset", {}, el("legend", { text: "Where the team shares" }),
+        [["branch", "This repository", "(a hidden branch; nothing else to set up)"], ["git", "Another git repository", ""], ["folder", "A shared folder", "(OneDrive, Teams, Dropbox, a network drive)"]]
+          .map(([v, l, h]) => el("label", { class: "choice" }, el("input", { type: "radio", name: "ts-hub", value: v, checked: mode === v, onchange: () => pick(v) }), el("span", {}, l, h ? el("small", { text: ` ${h}` }) : null))),
+        url, folder),
+      textField("team-sync", "name", "Your name", "As teammates will see it. Empty: your git user name."),
+    ];
+  },
+  "starter-kits": () => {
+    const stack = el("select", { onchange: (e) => setOpt("starter-kits", "stack", e.target.value) },
+      [["auto", "Detect it from the files"], ["dotnet", ".NET"], ["node", "Node.js"], ["python", "Python"], ["go", "Go"], ["flutter", "Flutter"], ["java", "Java"]]
+        .map(([v, l]) => el("option", { value: v, selected: opt("starter-kits").stack === v, text: l })));
+    return [
+      el("label", { class: "field" }, el("span", { text: "Stack" }), stack),
+      check("starter-kits", "merge", "Add the starter to my existing CLAUDE.md", "as a marked section, once. Off: it is written next to it as CLAUDE.starter.md."),
+    ];
+  },
+};
+
+// ---------------------------------------------------------------------------------------------
+// Cards
+// ---------------------------------------------------------------------------------------------
+function status(t) {
+  if (t.plugin) return ["Installed as a plugin", "ok"];
+  if (t.scope === "project") return t.installed ? ["Set up in this project", "ok"] : ["Not set up here", ""];
+  if (t.scope === "action") return null;
+  return t.installed ? ["Installed", "ok"] : ["Not installed", ""];
+}
+
+async function runAction(t, a) {
+  showDialog(`${t.name}: ${a.label}`, "Running...");
+  const r = await api("/api/action", { tool: t.id, action: a.id, options: choices[t.id] ? choices[t.id].options : {} });
+  const body = await r.json();
+  showDialog(`${t.name}: ${a.label}`, body.output || body.error || "(no output)");
+}
+
+function card(t) {
+  const c = choices[t.id];
+  const st = status(t);
+  const head = el("div", { class: "card-head" });
+  if (t.scope !== "action") {
+    const locked = applying || t.plugin || (t.scope === "project" && t.installed) || !S.ready;
+    head.append(el("label", { class: "switch", title: c.enabled ? "On" : "Off" },
+      el("input", { type: "checkbox", role: "switch", "aria-label": `${t.name}`, checked: c.enabled, disabled: locked, onchange: (e) => { c.enabled = e.target.checked; render(); } }),
+      el("span", { class: "slider" })));
+  }
+  head.append(el("div", { class: "titles" }, el("h3", { text: t.name }), st ? el("span", { class: `pill ${st[1]}`, text: st[0] }) : null));
+  head.append(el("span", { class: "tokens", text: t.tokens }));
+  const node = el("article", { class: `card${c && c.enabled ? " on" : ""}`, "data-id": t.id }, head, el("p", { class: "summary", text: t.summary }));
+  if (t.plugin) node.append(el("p", { class: "note", text: "Managed by Claude Code's /plugin, so this page leaves it alone." }));
+  if (t.id === "handover" && t.userLevel && !t.installed) node.append(el("p", { class: "summary", text: "Its hooks are already installed for you; switching it on here sets up this project's files." }));
+  if (t.scope === "user" && t.installed && c && !c.enabled && !t.plugin) node.append(el("p", { class: "note", text: `${t.name} will be removed when you press Apply.` }));
+  if (SETTINGS[t.id] && c && c.enabled && !t.plugin && !(t.scope === "project" && t.installed)) {
+    const d = el("details", { class: "settings", open: openSettings.has(t.id), ontoggle: (e) => { if (e.target.open) openSettings.add(t.id); else openSettings.delete(t.id); } },
+      el("summary", { text: "Settings" }), el("div", { class: "fields" }, SETTINGS[t.id](t)));
+    node.append(d);
+  }
+  if (t.scope === "project" && t.installed && t.removeHint) node.append(el("p", { class: "summary", text: t.removeHint }));
+  const acts = (t.actions || []).filter((a) => t.scope === "action" || t.installed || a.id === "preview");
+  if (acts.length) node.append(el("div", { class: "actions" }, acts.map((a) => el("button", { type: "button", class: "small", disabled: !S.ready || applying, onclick: () => runAction(t, a), text: a.label }))));
+  return node;
+}
+
+function render() {
+  for (const [scope, box] of [["user", "cards-user"], ["project", "cards-project"], ["action", "cards-action"]]) {
+    $(box).replaceChildren(...S.tools.filter((t) => t.scope === scope).map(card));
+  }
+  $("cfg").textContent = `Settings: ${S.configDir}`;
+  const p = S.project;
+  if (document.activeElement !== $("project")) $("project").value = p.dir;
+  $("project-hint").textContent = !p.exists ? "That folder does not exist." : p.home ? "This is your home folder. Pick a project folder for the tools below." : `${p.isGit ? "A git repository" : "Not a git repository"}${p.isGit && !p.hasRemote ? " without a remote" : ""}.`;
+  $("loading").hidden = S.ready;
+  const failed = S.failed || [];
+  const problems = $("problems");
+  if (failed.length && !problems.dataset.errors) {
+    problems.hidden = false;
+    problems.replaceChildren(el("b", { text: "Some tools could not be downloaded:" }), el("ul", {}, failed.map((f) => el("li", { text: `${f.repo}: ${f.error}` }))));
+  }
+  summarize();
+}
+
+function changes() {
+  const out = { install: [], remove: [], change: [] };
+  for (const t of S.tools) {
+    const c = choices[t.id];
+    if (!c || t.plugin || t.scope === "action") continue;
+    if (c.enabled && !t.installed) out.install.push(t.name);
+    else if (!c.enabled && t.installed && t.scope === "user") out.remove.push(t.name);
+    else if (c.enabled && t.installed && t.scope === "user" && JSON.stringify(clean(t.id, c.options)) !== JSON.stringify(clean(t.id, Object.assign({}, t.defaults, t.current)))) out.change.push(t.name);
+  }
+  return out;
+}
+// Fields that only steer the page, and secrets left empty (kept), do not count as a change.
+function clean(id, o) {
+  const x = Object.assign({}, o);
+  delete x.ntfyMode; delete x.hubMode;
+  if (id === "notify") for (const k of ["slack", "discord", "teams", "ntfy"]) { if (x[k] === "" || (typeof x[k] === "string" && x[k].startsWith("set ("))) delete x[k]; }
+  if (id === "notify" && (x.quiet === "" || x.quiet === undefined)) delete x.quiet;
+  return x;
+}
+
+function summarize() {
+  if (!S) return;
+  const c = changes();
+  const parts = [];
+  if (c.install.length) parts.push(el("span", {}, el("b", { text: `Install: ` }), c.install.join(", ")));
+  if (c.change.length) parts.push(el("span", {}, el("b", { text: `${parts.length ? " · " : ""}Change: ` }), c.change.join(", ")));
+  if (c.remove.length) parts.push(el("span", {}, el("b", { text: `${parts.length ? " · " : ""}Remove: ` }), c.remove.join(", ")));
+  $("summary").replaceChildren(...(parts.length ? parts : [S.ready ? "Nothing to change." : "Getting the tools..."]));
+  const any = c.install.length + c.change.length + c.remove.length > 0;
+  $("apply").disabled = !S.ready || applying || !any;
+  $("apply").textContent = c.change.length || c.remove.length ? "Apply" : "Install";
+  for (const card of document.querySelectorAll(".card")) {
+    const ch = choices[card.dataset.id];
+    card.classList.toggle("on", !!(ch && ch.enabled));
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Applying
+// ---------------------------------------------------------------------------------------------
+async function apply() {
+  applying = true;
+  render();
+  $("problems").hidden = true;
+  delete $("problems").dataset.errors;
+  const payload = {};
+  for (const t of S.tools) if (choices[t.id] && t.scope !== "action") payload[t.id] = choices[t.id];
+  const res = await api("/api/apply", { choices: payload });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    applying = false;
+    const problems = $("problems");
+    problems.hidden = false;
+    problems.dataset.errors = "1";
+    problems.replaceChildren(el("b", { text: "Please fix these first:" }), el("ul", {}, (body.errors || [body.error || "Something went wrong."]).map((e) => el("li", { text: e }))));
+    render();
+    problems.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  const box = $("progress");
+  box.hidden = false;
+  $("progress-title").textContent = "Applying";
+  $("result").replaceChildren();
+  const list = $("steps");
+  list.replaceChildren();
+  const items = [];
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  let final = null;
+  const on = (ev) => {
+    if (ev.type === "plan") {
+      if (!ev.steps.length) list.append(el("li", { text: "Nothing to run." }));
+      for (const label of ev.steps) {
+        const li = el("li", { class: "waiting" }, el("div", { class: "row" }, el("span", { class: "mark", text: "\u00b7" }), el("span", { class: "label", text: label })));
+        items.push(li);
+        list.append(li);
+      }
+      box.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (ev.type === "step") {
+      const li = items[ev.index];
+      li.className = ev.status;
+      li.querySelector(".mark").textContent = { running: "\u2026", ok: "\u2713", failed: "\u2717", skipped: "\u2013" }[ev.status] || "";
+      if (ev.output) {
+        const d = el("details", { open: ev.status === "failed" }, el("summary", { text: ev.status === "failed" ? "What went wrong" : "Output" }), el("pre", { text: ev.output }));
+        li.append(d);
+      }
+    } else if (ev.type === "done") {
+      final = ev;
+    }
+  };
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, i);
+      buf = buf.slice(i + 1);
+      if (line.trim()) on(JSON.parse(line));
+    }
+  }
+  applying = false;
+  const ok = final && final.ok;
+  $("progress-title").textContent = ok ? "Done" : "Finished, with problems";
+  const msgs = [ok ? "All set. Start a new Claude Code session to pick up the changes." : "Some steps failed: their output is open above. The rest was applied."];
+  if (ok && choices.glow && choices.glow.enabled && choices.glow.options.uiTheme) msgs.push("To recolor the whole interface, type /theme in Claude Code once and pick \u201cGlow (live)\u201d.");
+  for (const n of (final && final.notes) || []) msgs.push(n);
+  $("result").replaceChildren(...msgs.map((m) => el("p", { class: ok ? "" : "note", text: m })));
+  await load(true);
+}
+
+// ---------------------------------------------------------------------------------------------
+function showDialog(title, text) {
+  $("dialog-title").textContent = title;
+  $("dialog-text").textContent = text;
+  if (!$("dialog").open) $("dialog").showModal();
+}
+
+async function load(reset) {
+  const r = await api("/api/state");
+  if (r.status === 403) { document.body.replaceChildren(el("div", { class: "finished" }, el("h1", { text: "This link has expired" }), el("p", { text: "Run the setup command again to get a new one." }))); return; }
+  const fresh = await r.json();
+  const first = !S;
+  const becameReady = S && !S.ready && fresh.ready;
+  S = fresh;
+  if (first || reset || becameReady) {
+    choices = JSON.parse(JSON.stringify(S.choices));
+    // After an apply the switches show what is installed: the recommended ones are only
+    // switched on for a first look, never again after someone removed one.
+    if (!first && reset) for (const t of S.tools) if (choices[t.id]) choices[t.id].enabled = !!t.installed;
+  }
+  render();
+  if (!S.ready) setTimeout(() => load(false), 800);
+}
+
+$("apply").addEventListener("click", () => { if (!applying) apply(); });
+$("done").addEventListener("click", async () => {
+  await api("/api/quit", {}).catch(() => {});
+  document.body.replaceChildren(el("div", { class: "finished" }, el("h1", { text: "All set" }), el("p", { text: "The setup page has stopped. You can close this tab." })));
+});
+$("dialog-close").addEventListener("click", () => $("dialog").close());
+$("project-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const r = await api("/api/project", { dir: $("project").value });
+  const body = await r.json();
+  if (!r.ok) { $("project-hint").textContent = body.error; return; }
+  S = body;
+  const keep = choices;
+  choices = JSON.parse(JSON.stringify(S.choices));
+  for (const t of S.tools) if (t.scope === "user" && keep[t.id]) choices[t.id] = keep[t.id];
+  render();
+});
+setInterval(() => { api("/api/ping", {}).catch(() => {}); }, 30000);
+load(true);
+</script>
+</body>
+</html>

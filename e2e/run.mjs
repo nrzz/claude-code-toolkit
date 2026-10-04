@@ -290,6 +290,72 @@ if (want("marketplace")) {
   }
 }
 
+// ---- the one-command setup: this checkout's installer, fetching the tools as a user's would ----------
+// Its own home folder, with the same settings a user already had, so it cannot disturb the checks above.
+if (want("setup")) {
+  const sHome = path.join(base, "s");
+  const sCfg = path.join(sHome, ".claude");
+  fs.mkdirSync(sCfg, { recursive: true });
+  fs.writeFileSync(path.join(sCfg, "settings.json"), JSON.stringify(ORIGINAL, null, 2) + "\n");
+  const sEnv = { HOME: sHome, USERPROFILE: sHome, CLAUDE_CONFIG_DIR: sCfg };
+  const KIT = path.join(HERE, "..", "bin", "claude-toolkit.mjs");
+  const src = LOCAL ? ["--source", SIBLINGS] : [];
+  const kit = (argv) => run(process.execPath, [KIT, ...argv, ...src], { cwd: project, env: sEnv });
+  const sSettings = () => JSON.parse(fs.readFileSync(path.join(sCfg, "settings.json"), "utf8"));
+
+  const inst = kit(["install", "recommended,cost-guard", "--preset", "strict", "--theme", "dracula", "--daily", "0.5usd"]);
+  check("setup", "install recommended,cost-guard with options, in one command", inst.code === 0 && /Start a new Claude Code session/.test(inst.out), inst.out + inst.err);
+  const hooks = JSON.stringify(sSettings().hooks || {}).replace(/\\\\/g, "/");
+  check("setup", "every hook and the status line are in settings.json, the user's own keys kept",
+    ["claude-code-guardrails/guard.mjs", "/notify/app/notify.mjs", "cost-guard/app/guard.mjs"].every((h) => hooks.includes(h)) && /claude-code-glow/.test(sSettings().statusLine?.command || "") && sSettings().env?.MY_VAR === "1", hooks.slice(0, 300));
+  const pre = sSettings().hooks.PreToolUse.flatMap((g) => g.hooks).find((h) => JSON.stringify(h).includes("guardrails"));
+  const deny = run(pre.command, pre.args, { cwd: project, env: sEnv, input: JSON.stringify({ session_id: "s", cwd: project, hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: { command: "rm -rf /" } }) });
+  check("setup", "the guardrails hook it installed denies rm -rf /", parse(deny.out)?.hookSpecificOutput?.permissionDecision === "deny", deny.out + deny.err);
+  const st = kit(["status"]);
+  check("setup", "status reads the choices back", /Guardrails\s+installed \(preset strict\)/.test(st.out) && /theme dracula/.test(st.out) && /daily 0\.5usd/.test(st.out), st.out);
+
+  // The setup page: started as a user would, then driven through its own API.
+  const { spawn } = await import("node:child_process");
+  const child = spawn(process.execPath, [KIT, "setup", "--web", "--no-open", ...src], { cwd: project, env: { ...ENV, ...sEnv }, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+  let childOut = "";
+  child.stdout.on("data", (c) => { childOut += c; });
+  child.stderr.on("data", (c) => { childOut += c; });
+  const exited = new Promise((resolve) => child.on("exit", resolve));
+  const url = await new Promise((resolve) => {
+    const started = Date.now();
+    const tick = setInterval(() => {
+      const m = /http:\/\/127\.0\.0\.1:\d+\/\?t=[\w-]+/.exec(childOut);
+      if (m || Date.now() - started > 30000) { clearInterval(tick); resolve(m?.[0]); }
+    }, 100);
+  });
+  check("setup", "the setup page starts on 127.0.0.1 with a one-time key in its link", !!url, childOut);
+  if (url) {
+    const u = new URL(url);
+    const token = u.searchParams.get("t");
+    const api = (p, body) => fetch(`${u.origin}${p}`, { method: body ? "POST" : "GET", headers: { "x-toolkit-token": token, ...(body ? { "content-type": "application/json" } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    const page = await fetch(url);
+    check("setup", "the page loads, with a strict Content-Security-Policy", page.status === 200 && /default-src 'none'/.test(page.headers.get("content-security-policy") || ""));
+    check("setup", "the page refuses a request without the key", (await api("/api/state").then(() => fetch(`${u.origin}/api/state`))).status === 403);
+    let state = null;
+    for (let i = 0; i < 120 && !state?.ready; i++) { state = await (await api("/api/state")).json(); if (!state.ready) await new Promise((r) => setTimeout(r, 500)); }
+    check("setup", "it fetched all nine tools and sees what is installed", state?.ready && state.failed.length === 0 && state.tools.filter((t) => t.installed).length === 4 && state.glowThemes.length >= 15, JSON.stringify(state?.failed));
+    const applied = await (await api("/api/apply", { choices: { glow: { enabled: true, options: { theme: "nord", icons: "unicode", uiTheme: true } }, notify: { enabled: false } } })).text();
+    const last = parse(applied.trim().split("\n").pop());
+    const glowCfg = parse(fs.readFileSync(path.join(sCfg, "claude-code-glow", "config.json"), "utf8"));
+    check("setup", "Apply on the page changes the glow theme and removes notify", last?.ok === true && glowCfg?.theme === "nord" && !JSON.stringify(sSettings().hooks || {}).includes("notify.mjs"), applied.slice(-600));
+    await api("/api/quit", {});
+  }
+  const code = await Promise.race([exited, new Promise((r) => setTimeout(() => { child.kill(); r("killed"); }, 15000))]);
+  check("setup", "Done stops the page's server", code === 0, `exit ${code}`);
+
+  const un = kit(["uninstall", "all"]);
+  check("setup", "uninstall all leaves settings.json exactly as the user had it", un.code === 0 && JSON.stringify(sSettings()) === JSON.stringify(ORIGINAL), JSON.stringify(sSettings()));
+  if (!LOCAL) {
+    const v = runCmd(NPX, ["-y", "github:nrzz/claude-code-toolkit", "--version"], { env: sEnv });
+    check("setup", "npx -y github:nrzz/claude-code-toolkit runs from GitHub", v.code === 0 && /^\d+\.\d+\.\d+/.test(v.out.trim()), v.out + v.err);
+  }
+}
+
 // ---- uninstall everything: the settings must be the user's own again ----------------------------------
 if (!only.length) {
   for (const [repo, bin, argv] of [

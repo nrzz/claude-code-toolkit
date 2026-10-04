@@ -74,6 +74,8 @@ header.top .wrap { display: flex; align-items: center; justify-content: space-be
 .hero h1 { font-size: clamp(2rem, 5vw, 3.1rem); line-height: 1.12; letter-spacing: -.02em; margin: 0 0 18px; max-width: 18ch; }
 .hero p.lead { font-size: 1.15rem; color: var(--muted); max-width: 62ch; margin: 0 0 28px; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; }
+.cta-note { color: var(--muted); font-size: .95rem; margin: 14px 0 0; max-width: 72ch; }
+.cta-note code { overflow-wrap: anywhere; }
 .cmd {
   display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border);
   border-radius: 10px; padding: 10px 10px 10px 14px; box-shadow: var(--shadow); max-width: 100%; min-width: 0;
@@ -157,9 +159,10 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     <h1>Claude Code, cheaper, safer and easier to share</h1>
     <p class="lead">Nine small, open-source tools. Each is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all nine are tested together, installed from GitHub, on Windows, macOS and Linux.</p>
     <div class="cta">
-      <div class="cmd"><code><span class="prompt">&gt; </span>/plugin marketplace add nrzz/claude-code-toolkit</code><button class="copy" type="button" data-copy="/plugin marketplace add nrzz/claude-code-toolkit">Copy</button></div>
+      <div class="cmd"><code><span class="prompt">$ </span>npx -y github:nrzz/claude-code-toolkit</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-code-toolkit">Copy</button></div>
       <a class="btn secondary" href="https://github.com/nrzz/claude-code-toolkit">View on GitHub</a>
     </div>
+    <p class="cta-note">Opens a setup page with the recommended tools already switched on: one click on Install sets them up, and each tool's settings are there when you want them. Prefer Claude Code's plugins? <code>/plugin marketplace add nrzz/claude-code-toolkit</code></p>
     <ul class="stats">
       <li><b>9</b><span>tools, MIT licensed</span></li>
       <li><b>0</b><span>dependencies</span></li>
@@ -252,6 +255,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
         <ol class="steps">
           <li>A throwaway home and Claude Code config that already hold settings of their own.</li>
           <li>Every tool installed from GitHub, and every hook run exactly as <code>settings.json</code> lists it, with the JSON Claude Code sends: guardrails denies <code>rm -rf /</code>, notify pings after a long turn, cost guard holds a prompt over a hard budget, two teammates share a session through one git remote, a replay escapes hostile text.</li>
+          <li>The one-command setup run as a user would, in a second home folder: install with options, the setup page started for real and driven through its own API, Done, and everything uninstalled again.</li>
           <li>All seven plugins installed from this marketplace with <code>claude plugin install</code>, their own hooks run from the installed copies, their token estimate checked, and the HUD's engine tests run inside Claude Code.</li>
           <li>Everything uninstalled, and <code>settings.json</code> checked to be exactly what the user had.</li>
         </ol>

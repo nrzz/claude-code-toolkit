@@ -55,6 +55,16 @@ test("website: every command it offers to copy is one the README gives too", () 
   for (const command of commands) assert.ok(README.includes(command), command);
 });
 
+test("one command sets everything up: the package runs the setup, and the README and website lead with it", () => {
+  const pkg = JSON.parse(read("package.json"));
+  assert.equal(pkg.bin["claude-code-toolkit"], "bin/claude-toolkit.mjs");
+  assert.ok(read("bin/claude-toolkit.mjs").startsWith("#!/usr/bin/env node\n"));
+  assert.deepEqual(pkg.dependencies, undefined, "no dependencies");
+  const cmd = "npx -y github:nrzz/claude-code-toolkit";
+  assert.ok(README.includes(cmd) && README.indexOf(cmd) < README.indexOf("/plugin marketplace add"), "README: the one command comes first");
+  assert.ok(SITE.indexOf(`data-copy="${cmd}"`) > 0 && SITE.indexOf(`data-copy="${cmd}"`) < SITE.indexOf("/plugin marketplace add"), "website: the one command comes first");
+});
+
 test("e2e: the harness parses and covers every tool and the marketplace", () => {
   const file = path.join(ROOT, "e2e", "run.mjs");
   const check = spawnSync(process.execPath, ["--check", file], { encoding: "utf8" });
@@ -62,4 +72,5 @@ test("e2e: the harness parses and covers every tool and the marketplace", () => 
   const src = read("e2e/run.mjs");
   for (const tool of TOOLS) assert.ok(src.includes(tool), tool);
   assert.ok(src.includes('want("marketplace")'));
+  assert.ok(src.includes('want("setup")'), "and the one-command setup");
 });
