@@ -60,11 +60,11 @@ test("requests for another host name, from another origin, or without the token 
   assert.equal((await s.api("/api/state")).status, 200);
 });
 
-test("the state lists all nine tools, the recommended ones switched on, and the glow themes", async (t) => {
+test("the state lists all ten tools, the recommended ones switched on, and the glow themes", async (t) => {
   const s = await start();
   t.after(() => s.server.close());
   const st = JSON.parse((await s.api("/api/state")).text);
-  assert.equal(st.tools.length, 9);
+  assert.equal(st.tools.length, 10);
   assert.equal(st.ready, true);
   assert.deepEqual(st.glowThemes.map((x) => x.slug), ["classic", "nord"]);
   assert.deepEqual(Object.entries(st.choices).filter(([, c]) => c.enabled).map(([id]) => id), ["guardrails", "notify", "glow"]);

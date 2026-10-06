@@ -88,6 +88,7 @@ export function readState({ env = process.env, project = process.cwd() } = {}) {
     "starter-kits": { installed: inProject(".claude", "agents", "test-runner.md"), current: { stack: "auto", merge: false } },
     "md-doctor": { installed: false, current: {} },
     replay: { installed: false, current: {} },
+    "chat-ferry": { installed: false, current: {} },
   };
   for (const t of TOOLS) {
     // A tool's plugin under its name from any marketplace, or under its name until 4 October 2026 from our own

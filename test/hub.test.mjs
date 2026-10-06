@@ -14,7 +14,7 @@ const README = read("README.md");
 const SITE = read("docs/index.html");
 const TOOLS = [
   "claude-code-handover", "claude-code-team-sync", "claude-code-glow", "claude-code-guardrails", "claude-code-notify",
-  "claude-cost-guard", "claude-md-doctor", "claude-code-starter-kits", "claude-session-replay",
+  "claude-cost-guard", "claude-md-doctor", "claude-code-starter-kits", "claude-session-replay", "claude-chat-ferry",
 ];
 
 test("marketplace: named claude-code-toolkit, unique plugin names, every field filled", () => {

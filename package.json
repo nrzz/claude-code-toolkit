@@ -1,8 +1,8 @@
 {
   "name": "claude-code-toolkit",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "private": true,
-  "description": "Nine small, dependency-free Claude Code tools, set up in one click from a local page or one command, with one plugin marketplace and an end-to-end test of all nine together",
+  "description": "Ten small, dependency-free Claude Code tools, set up in one click from a local page or one command, with one plugin marketplace and an end-to-end test of all ten together",
   "bin": {
     "claude-code-toolkit": "bin/claude-toolkit.mjs",
     "claude-toolkit": "bin/claude-toolkit.mjs"

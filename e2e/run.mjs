@@ -185,6 +185,35 @@ if (want("replay")) {
   check("replay", "search finds the session", s.code === 0 && /eeeeeeee/.test(s.out), s.out + s.err);
 }
 
+// ---- chat-ferry ------------------------------------------------------------------------------------
+// An Antigravity-style conversation in a folder the tool reads through ANTIGRAVITY_DIR, imported as
+// a Claude Code session, then a Claude Code session exported for Cursor. The marketplace section
+// below resumes the imported session with Claude Code itself.
+let ferrySession = null;
+if (want("chat-ferry")) {
+  const ag = path.join(base, "antigravity");
+  const logs = path.join(ag, "brain", "e2e00000-0000-4000-8000-000000000001", ".system_generated", "logs");
+  fs.mkdirSync(logs, { recursive: true });
+  fs.writeFileSync(path.join(logs, "transcript.jsonl"), [
+    { step_index: 0, source: "USER_EXPLICIT", type: "USER_INPUT", status: "DONE", created_at: "2026-09-30T10:00:00Z", content: "<USER_REQUEST>\nfix the retry loop in client.go\n</USER_REQUEST>" },
+    { step_index: 1, source: "SYSTEM", type: "CONVERSATION_HISTORY", status: "DONE", created_at: "2026-09-30T10:00:01Z" },
+    { step_index: 2, source: "MODEL", type: "PLANNER_RESPONSE", status: "DONE", created_at: "2026-09-30T10:00:05Z", content: "The loop never backs off; adding exponential backoff with a 30 second cap." },
+  ].map((l) => JSON.stringify(l)).join("\n") + "\n");
+  const imp = tool("claude-chat-ferry", "bin/claude-chat-ferry.mjs", ["import", "antigravity:latest"], { cwd: project, env: { ANTIGRAVITY_DIR: ag } });
+  const id = /claude --resume ([0-9a-f-]{36})/.exec(imp.out)?.[1] || "";
+  const sessionFile = id ? path.join(cfg, "projects", project.replace(/[^A-Za-z0-9]/g, "-"), `${id}.jsonl`) : "";
+  check("chat-ferry", "import writes a Claude Code session for the project and prints the resume line", imp.code === 0 && !!id && fs.existsSync(sessionFile), imp.out + imp.err);
+  const text = sessionFile && fs.existsSync(sessionFile) ? fs.readFileSync(sessionFile, "utf8") : "";
+  check("chat-ferry", "the session holds the banner, the prompt and the answer", text.includes("[Conversation imported from Antigravity") && text.includes("fix the retry loop in client.go") && text.includes("exponential backoff"), text.slice(0, 300));
+  if (text) ferrySession = { id, file: sessionFile };
+  const exp = tool("claude-chat-ferry", "bin/claude-chat-ferry.mjs", ["export", `claude:${id.slice(0, 8)}`, "--to", "cursor"], { cwd: project });
+  const md = /^Wrote (\S+)/m.exec(exp.out)?.[1] || "";
+  const mdFile = md ? path.join(project, md) : "";
+  check("chat-ferry", "export writes a Markdown file under .ai-chats for Cursor", exp.code === 0 && md.replace(/\\/g, "/").startsWith(".ai-chats/") && fs.existsSync(mdFile) && fs.readFileSync(mdFile, "utf8").includes("## Assistant"), exp.out + exp.err);
+  const list = tool("claude-chat-ferry", "bin/claude-chat-ferry.mjs", ["list", "--from", "claude"], { cwd: project });
+  check("chat-ferry", "list shows the imported session", list.code === 0 && list.out.includes(id.slice(0, 8)), list.out + list.err);
+}
+
 // ---- starter-kits, then md-doctor on what they wrote -----------------------------------------------
 if (want("starter") || want("md-doctor")) {
   const k = tool("claude-code-starter-kits", "bin/claude-starter.mjs", [], { cwd: project });
@@ -298,6 +327,30 @@ if (want("marketplace")) {
     check("marketplace", "the guardrails plugin's own hook denies rm -rf /", parse(denied.out)?.hookSpecificOutput?.permissionDecision === "deny", denied.out + denied.err);
     const allowed = pluginHook("guardrails@claude-code-toolkit", "PreToolUse", { tool_name: "Bash", tool_input: { command: "npm test" } });
     check("marketplace", "the guardrails plugin's own hook passes npm test in silence", allowed.code === 0 && allowed.out.trim() === "", allowed.out + allowed.err);
+    // Does Claude Code continue the session chat-ferry imported? Claude Code is pointed at a fake
+    // API on localhost that records the request and answers with an error: nothing is sent
+    // anywhere and no token is spent. The session lives in the main config folder, so that is the
+    // environment used here.
+    if (ferrySession) {
+      const http = await import("node:http");
+      const { spawn } = await import("node:child_process");
+      const seen = [];
+      const srv = http.createServer((req, res) => { let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { seen.push(b); res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "fake api" } })); }); });
+      await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+      const fakeEnv = { ...ENV, ANTHROPIC_API_KEY: "sk-ant-api03-bogus", ANTHROPIC_BASE_URL: `http://127.0.0.1:${srv.address().port}`, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1", DISABLE_TELEMETRY: "1", DISABLE_ERROR_REPORTING: "1" };
+      const argv = ["-p", "--resume", ferrySession.id, "--output-format", "json", "Reply OK. E2E_NEW_PROMPT"];
+      const viaShell = process.platform === "win32" && !/\.exe$/i.test(CLAUDE);
+      const quoted = [CLAUDE, ...argv].map((a) => (/[\s"&|<>^]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a)).join(" ");
+      const child = viaShell ? spawn(quoted, [], { cwd: project, env: fakeEnv, shell: true, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }) : spawn(CLAUDE, argv, { cwd: project, env: fakeEnv, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+      let errText = "";
+      child.stderr.on("data", (d) => (errText += d));
+      child.stdout.on("data", () => {});
+      await new Promise((r) => { const t = setTimeout(() => { child.kill(); r(); }, 120000); child.on("exit", () => { clearTimeout(t); r(); }); });
+      srv.close();
+      const body = seen.map((b) => parse(b)).find((j) => j?.messages);
+      const sent = JSON.stringify(body?.messages || []);
+      check("marketplace", "Claude Code resumes the session chat-ferry imported and sends its turns to the model", !!body && sent.includes("fix the retry loop in client.go") && sent.includes("exponential backoff") && sent.includes("E2E_NEW_PROMPT"), (body ? "" : "no request reached the fake API; ") + errText.slice(0, 300));
+    }
     const ping = pluginHook("nudge@claude-code-toolkit", "Notification", { message: "Claude needs your permission to use Bash", notification_type: "permission_prompt" });
     check("marketplace", "the nudge plugin's (notify's) own hook pings on a permission prompt", /permission/.test(parse(ping.out)?.terminalSequence || ""), ping.out + ping.err);
     const budget = pluginHook("spendcap@claude-code-toolkit", "UserPromptSubmit", { prompt: "hi", source: "user" });
@@ -369,7 +422,7 @@ if (want("setup")) {
     for (let i = 0; i < 120 && !state?.ready; i++) { state = await (await api("/api/state")).json(); if (!state.ready) await new Promise((r) => setTimeout(r, 500)); }
     // The four installed above; project tools depend on what earlier sections left in the project.
     const userInstalled = (state?.tools || []).filter((t) => t.scope === "user" && t.installed).map((t) => t.id);
-    check("setup", "it fetched all nine tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
+    check("setup", "it fetched all ten tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
       JSON.stringify({ failed: state?.failed, userInstalled, glowThemes: state?.glowThemes?.length }));
     const applied = await (await api("/api/apply", { choices: { glow: { enabled: true, options: { theme: "nord", icons: "unicode", uiTheme: true } }, notify: { enabled: false } } })).text();
     const last = parse(applied.trim().split("\n").pop());
@@ -410,6 +463,6 @@ if (!results.length) failed.push({ area: "e2e", what: `no checks ran${only.lengt
 const passed = results.filter((r) => r.ok).length;
 console.log(results.length
   ? `\n${passed} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map((f) => `${f.area}: ${f.what}`).join("; ")}` : ""}.`
-  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
+  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
 if (!args.includes("--keep")) fs.rmSync(base, { recursive: true, force: true });
 process.exitCode = failed.length ? 1 : 0;

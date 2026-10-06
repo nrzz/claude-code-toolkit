@@ -4,21 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude Code toolkit: open-source plugins that save tokens</title>
-<meta name="description" content="Nine small, open-source tools for Claude Code: themes and a HUD, safety guardrails, notifications, token budgets, a CLAUDE.md doctor, session replays, team session sharing, starter kits and handovers. No dependencies, few or no tokens.">
+<meta name="description" content="Ten small, open-source tools for Claude Code: themes and a HUD, safety guardrails, notifications, token budgets, a CLAUDE.md doctor, session replays, chat moves to Cursor and Antigravity, team session sharing, starter kits and handovers. No dependencies, few or no tokens.">
 <link rel="canonical" href="https://nrzz.github.io/claude-code-toolkit/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Claude Code toolkit">
-<meta property="og:description" content="Nine small, open-source tools that make Claude Code cheaper, safer and easier to share. No dependencies, few or no tokens, tested together on Windows, macOS and Linux.">
+<meta property="og:description" content="Ten small, open-source tools that make Claude Code cheaper, safer and easier to share. No dependencies, few or no tokens, tested together on Windows, macOS and Linux.">
 <meta property="og:url" content="https://nrzz.github.io/claude-code-toolkit/">
 <meta property="og:site_name" content="Claude Code toolkit">
 <meta property="og:image" content="https://nrzz.github.io/claude-code-toolkit/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Claude Code toolkit: nine small tools that make Claude Code cheaper, safer and easier to share. npx -y github:nrzz/claude-code-toolkit">
+<meta property="og:image:alt" content="Claude Code toolkit: ten small tools that make Claude Code cheaper, safer and easier to share. npx -y github:nrzz/claude-code-toolkit">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://nrzz.github.io/claude-code-toolkit/og.png">
 <meta name="twitter:title" content="Claude Code toolkit">
-<meta name="twitter:description" content="Nine small, open-source tools that make Claude Code cheaper, safer and easier to share.">
+<meta name="twitter:description" content="Ten small, open-source tools that make Claude Code cheaper, safer and easier to share.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d97757'/%3E%3Cpath d='M9 11l6 5-6 5M17 22h7' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <script type="application/ld+json">
@@ -36,7 +36,8 @@
     {"@type": "ListItem", "position": 6, "item": {"@type": "SoftwareSourceCode", "name": "claude-cost-guard", "codeRepository": "https://github.com/nrzz/claude-cost-guard", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
     {"@type": "ListItem", "position": 7, "item": {"@type": "SoftwareSourceCode", "name": "claude-md-doctor", "codeRepository": "https://github.com/nrzz/claude-md-doctor", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
     {"@type": "ListItem", "position": 8, "item": {"@type": "SoftwareSourceCode", "name": "claude-code-starter-kits", "codeRepository": "https://github.com/nrzz/claude-code-starter-kits", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
-    {"@type": "ListItem", "position": 9, "item": {"@type": "SoftwareSourceCode", "name": "claude-session-replay", "codeRepository": "https://github.com/nrzz/claude-session-replay", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}}
+    {"@type": "ListItem", "position": 9, "item": {"@type": "SoftwareSourceCode", "name": "claude-session-replay", "codeRepository": "https://github.com/nrzz/claude-session-replay", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 10, "item": {"@type": "SoftwareSourceCode", "name": "claude-chat-ferry", "codeRepository": "https://github.com/nrzz/claude-chat-ferry", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}}
   ]
 }
 </script>
@@ -175,7 +176,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <main>
   <div class="wrap hero">
     <h1>Claude Code, cheaper, safer and easier to share</h1>
-    <p class="lead">Nine small, open-source tools. Each is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all nine are tested together, installed from GitHub, on Windows, macOS and Linux.</p>
+    <p class="lead">Ten small, open-source tools. Each is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all ten are tested together, installed from GitHub, on Windows, macOS and Linux.</p>
     <div class="cta">
       <div class="cmd"><code><span class="prompt">$ </span>npx -y github:nrzz/claude-code-toolkit</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-code-toolkit">Copy</button></div>
       <a class="btn secondary" href="https://github.com/nrzz/claude-code-toolkit">View on GitHub</a>
@@ -251,6 +252,12 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
           <div class="tags"><span class="tag tokens">0: runs outside Claude</span><span class="tag">CLI + plugin</span></div>
           <div class="cmd"><code>npx -y github:nrzz/claude-session-replay list</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-session-replay list">Copy</button></div>
         </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-chat-ferry">Chat ferry</a></h3>
+          <p>Continue a Cursor or Antigravity chat in Claude Code (<code>claude --resume</code> opens it with the whole chat as history), hand a Claude Code session to them, or turn any chat into Markdown or JSON. Reads Codex CLI, claude.ai and ChatGPT exports too.</p>
+          <div class="tags"><span class="tag tokens">0: runs outside Claude</span><span class="tag">CLI + plugin</span></div>
+          <div class="cmd"><code>npx -y github:nrzz/claude-chat-ferry import cursor:latest</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-chat-ferry import cursor:latest">Copy</button></div>
+        </article>
       </div>
     </div>
   </section>
@@ -277,7 +284,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
           <li>A throwaway home and Claude Code config that already hold settings of their own.</li>
           <li>Every tool installed from GitHub, and every hook run exactly as <code>settings.json</code> lists it, with the JSON Claude Code sends: guardrails denies <code>rm -rf /</code>, notify pings after a long turn, cost guard holds a prompt over a hard budget, two teammates share a session through one git remote, a replay escapes hostile text.</li>
           <li>The one-command setup run as a user would, in a second home folder: install with options, the setup page started for real and driven through its own API, Done, and everything uninstalled again.</li>
-          <li>All seven plugins installed from this marketplace with <code>claude plugin install</code>, their own hooks run from the installed copies, their token estimate checked, and the HUD's engine tests run inside Claude Code.</li>
+          <li>All eight plugins installed from this marketplace with <code>claude plugin install</code>, their own hooks run from the installed copies, their token estimate checked, and the HUD's engine tests run inside Claude Code.</li>
           <li>Everything uninstalled, and <code>settings.json</code> checked to be exactly what the user had.</li>
         </ol>
       </div>
@@ -291,6 +298,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <div class="panel">
         <ul class="releases">
           <li><a href="https://github.com/nrzz/claude-code-team-sync/releases/tag/v1.2.1">team-sync <span class="v">v1.2.1</span></a><p>Privacy fixes: the session title and any tool input field named like a secret are now redacted before a session is shared, and an invalid settings file is left as it is.</p></li>
+          <li><a href="https://github.com/nrzz/claude-chat-ferry/releases/tag/v1.0.0">chat-ferry <span class="v">v1.0.0</span></a><p>New: continue a Cursor or Antigravity chat in Claude Code, hand a Claude Code session to them, or turn any chat into Markdown or JSON.</p></li>
+          <li><a href="https://github.com/nrzz/claude-code-toolkit/releases/tag/v1.2.0">toolkit <span class="v">v1.2.0</span></a><p>Ten tools: the setup page, the marketplace and the end-to-end test now include chat ferry.</p></li>
           <li><a href="https://github.com/nrzz/claude-session-replay/releases/tag/v1.0.3">session-replay <span class="v">v1.0.3</span></a><p><code>--redact</code> also hides fields named like secrets, control characters are removed from names, titles and snippets, and the plugin is now called <code>replayer</code>.</p></li>
           <li><a href="https://github.com/nrzz/claude-code-handover/releases/tag/v1.4.1">handover <span class="v">v1.4.1</span></a><p>The guard's limit follows your context window setting, and <code>/recall</code> and the audit scripts follow <code>CLAUDE_CONFIG_DIR</code>.</p></li>
           <li><a href="https://github.com/nrzz/claude-code-glow/releases/tag/v1.0.2">glow <span class="v">v1.0.2</span></a><p>The token doctor no longer counts user-only skills, and the plugins are now called <code>glowline</code> and <code>glowbar</code>.</p></li>

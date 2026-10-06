@@ -2,6 +2,11 @@
 
 All notable changes to Claude Code toolkit are written here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-10-06
+
+- A tenth tool: [claude-chat-ferry](https://github.com/nrzz/claude-chat-ferry) moves a chat between Claude Code, Cursor and Antigravity (and reads Codex CLI, claude.ai and ChatGPT exports). The setup page lists it, the marketplace carries its `chat-ferry` plugin, and the end-to-end test imports an Antigravity conversation as a Claude Code session, exports a session for Cursor, and, with a Claude Code CLI at hand, resumes the imported session through Claude Code against a fake API.
+- Website and README: ten tools, eight plugins, the new tool's card and rows.
+
 ## [1.1.2] - 2026-10-04
 
 - The marketplace lists the renamed plugins: `glowline` (was glow), `glowbar` (glow-hud), `nudge` (notify), `spendcap` (cost-guard) and `replayer` (replay), so that each has a name of its own in Anthropic's plugin directory. The setup page recognises a tool's plugin under its new name from any marketplace, and under its old name only from our marketplaces.
@@ -22,6 +27,7 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 - First release: one plugin marketplace for glow, glow-hud, guardrails, notify, cost-guard, md-doctor and replay; the website; an end-to-end test that installs all nine tools from GitHub, runs their hooks, installs the plugins with Claude Code's own commands and checks that uninstalling restores the user's settings.
 
+[1.2.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/nrzz/claude-code-toolkit/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/nrzz/claude-code-toolkit/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.0.0...v1.1.0

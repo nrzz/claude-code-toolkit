@@ -1,4 +1,4 @@
-// The nine tools: where each lives, what it asks, and the exact command lines that install,
+// The ten tools: where each lives, what it asks, and the exact command lines that install,
 // change and remove it. Every command line is an argument array for the tool's own CLI, never a
 // shell string, so nothing a person types can become a command.
 
@@ -191,6 +191,14 @@ export const TOOLS = [
     defaults: {},
     validate: () => ({}),
     actions: { list: { label: "This project's sessions", args: (o, ctx) => ["list", "--project", ctx.project] } },
+  },
+  {
+    id: "chat-ferry", repo: "claude-chat-ferry", bin: "bin/claude-chat-ferry.mjs", scope: "action",
+    name: "Chat ferry", tokens: "0: runs outside Claude",
+    summary: "Continue a Cursor or Antigravity chat in Claude Code, hand a Claude Code session to them, or turn any chat (Codex CLI, claude.ai and ChatGPT exports too) into Markdown or JSON.",
+    defaults: {},
+    validate: () => ({}),
+    actions: { list: { label: "This project's chats in every tool", args: (o, ctx) => ["list", "--project", ctx.project] } },
   },
 ];
 

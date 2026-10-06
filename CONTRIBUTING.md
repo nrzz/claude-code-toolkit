@@ -1,6 +1,6 @@
 # Contributing to Claude Code toolkit
 
-Thanks for helping. Claude Code toolkit is the home of nine small Claude Code tools: the one-click setup, one plugin marketplace for all of them, the website, and an end-to-end test of all nine together. The bar for a change is the bar the code already meets: it works on Windows, macOS and Linux, it is tested, and it never wastes anyone's tokens.
+Thanks for helping. Claude Code toolkit is the home of ten small Claude Code tools: the one-click setup, one plugin marketplace for all of them, the website, and an end-to-end test of all ten together. The bar for a change is the bar the code already meets: it works on Windows, macOS and Linux, it is tested, and it never wastes anyone's tokens.
 
 ## Start here
 
@@ -33,7 +33,7 @@ npm test
 | `src/server.mjs`, `src/ui/setup.html` | the setup page and its local server (127.0.0.1, one-time key, Host and Origin checks) |
 | `src/fetch.mjs`, `src/tar.mjs` | getting the tools from GitHub without npm or git |
 | `.claude-plugin/marketplace.json` | the plugin marketplace; every source is an https clone of a tool's repository |
-| `e2e/run.mjs` | the end-to-end test of all nine tools and of the setup |
+| `e2e/run.mjs` | the end-to-end test of all ten tools and of the setup |
 | `docs/index.html` | the website (GitHub Pages), one self-contained file |
 | `test/` | the setup's tests, and checks that the marketplace, README and website agree |
 

@@ -7,7 +7,7 @@ const v = (id, o, ctx) => byId(id).validate(o, ctx);
 const bad = (id, o, re, ctx) => assert.throws(() => v(id, o, ctx), (e) => e instanceof OptionError && re.test(e.message));
 
 test("every tool has a repository, a command file, a summary, a token note and valid defaults", () => {
-  assert.equal(TOOLS.length, 9);
+  assert.equal(TOOLS.length, 10);
   for (const t of TOOLS) {
     assert.match(t.repo, /^claude-[a-z-]+$/, t.id);
     assert.match(t.bin, /\.mjs$/, t.id);
