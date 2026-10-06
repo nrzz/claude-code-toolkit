@@ -57,6 +57,17 @@ test("website: the numbers under the hero count every tool and match the README'
   assert.equal(stat("automated tests"), `${tests}+`);
 });
 
+test("the link preview image's source names every tool, says how many, and gives the README's test count", () => {
+  const src = read("media/preview.html");
+  const chips = [...src.matchAll(/<span class="chip">([^<]+)<\/span>/g)].map((m) => m[1]);
+  // A chip is the tool's short name: its repository name without the claude-, code- or session- prefix.
+  assert.deepEqual([...chips].sort(), TOOLS.map((t) => t.replace(/^claude-(code-|session-)?/, "")).sort());
+  const words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"];
+  assert.match(src, new RegExp(`<h1>${words[TOOLS.length]} small tools`));
+  const tests = /Over ([\d,]+) automated tests/.exec(README)?.[1];
+  assert.ok(src.includes(`${tests}+ tests`), `${tests}+ tests`);
+});
+
 test("website: every command it offers to copy is one the README gives too", () => {
   const commands = [...SITE.matchAll(/data-copy="([^"]+)"/g)].map((m) => m[1]);
   assert.ok(commands.length >= 9, String(commands.length));

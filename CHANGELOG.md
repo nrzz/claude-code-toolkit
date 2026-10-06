@@ -4,7 +4,7 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 ## [Unreleased]
 
-- Website: the numbers under the hero said 9 tools and 3,200+ tests after chat ferry joined; they now say 10 and 3,500+, like the README, and a test keeps them in step. The link preview image lists chat-ferry among the tools and says 3,500+ tests.
+- Website: the numbers under the hero said 9 tools and 3,200+ tests after chat ferry joined; they now say 10 and 3,500+, like the README, and a test keeps them in step. The link preview image lists chat-ferry among the tools and says 3,500+ tests; its source is now kept in `media/preview.html`, with a test that it names every tool, says how many, and gives the README's test count.
 
 ## [1.2.0] - 2026-10-06
 

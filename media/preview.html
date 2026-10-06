@@ -1,0 +1,60 @@
+<!doctype html>
+<!--
+  The link preview image, drawn at the window's size. test/hub.test.mjs checks that it names every tool
+  and gives the README's test count. After changing it, draw the images again with Edge or Chrome. Pass
+  this file as a full file:/// URL (a bare path is read as a web address) and a throwaway profile folder:
+
+    msedge --headless=new --hide-scrollbars --force-device-scale-factor=1 --user-data-dir=<temp folder>
+      --window-size=1200,630 --screenshot=<repo>/docs/og.png file:///<repo>/media/preview.html
+
+  The same with --window-size=1280,640 draws the GitHub social preview, which is uploaded by hand in the
+  repository's Settings, General, Social preview (GitHub has no API for it) and is not kept here.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 100vw; height: 100vh; overflow: hidden; }
+  body {
+    background: #1a1918; color: #ecebe7;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    position: relative;
+  }
+  .glow { position: absolute; right: -180px; top: -220px; width: 640px; height: 640px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(224,138,104,.28), rgba(224,138,104,0) 68%); }
+  .wrap { position: absolute; inset: 64px 72px 56px 72px; display: flex; flex-direction: column; }
+  .brand { display: flex; align-items: center; gap: 16px; font-size: 28px; font-weight: 600; color: #e08a68; letter-spacing: .2px; }
+  .mark { width: 52px; height: 52px; border-radius: 12px; background: #d97757; display: grid; place-items: center; }
+  h1 { margin: 34px 0 0; font-size: 58px; line-height: 1.12; font-weight: 700; letter-spacing: -.6px; max-width: 1060px; text-wrap: balance; }
+  .chips { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; max-width: 1060px; }
+  .chip { font: 500 22px/1 ui-monospace, Consolas, monospace; padding: 10px 14px; border-radius: 10px;
+    background: #2b2a27; border: 1px solid #3a3935; color: #ecebe7; }
+  .bottom { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .cmd { font: 600 26px/1 ui-monospace, Consolas, monospace; padding: 16px 20px; border-radius: 12px;
+    background: #232220; border: 1px solid #e08a68; color: #ecebe7; white-space: nowrap; }
+  .cmd b { color: #e08a68; font-weight: 600; }
+  .facts { font-size: 22px; color: #a8a69f; text-align: right; line-height: 1.45; }
+  .facts strong { color: #6fcf97; font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark"><svg width="32" height="32" viewBox="0 0 32 32"><path d="M8 10l7 6-7 6M17 23h8" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      Claude Code toolkit
+    </div>
+    <h1>Ten small tools that make Claude&nbsp;Code cheaper, safer and easier to share</h1>
+    <div class="chips">
+      <span class="chip">guardrails</span><span class="chip">notify</span><span class="chip">cost-guard</span>
+      <span class="chip">handover</span><span class="chip">team-sync</span><span class="chip">glow</span>
+      <span class="chip">md-doctor</span><span class="chip">replay</span><span class="chip">starter-kits</span>
+      <span class="chip">chat-ferry</span>
+    </div>
+    <div class="bottom">
+      <div class="cmd"><b>$</b> npx -y github:nrzz/claude-code-toolkit</div>
+      <div class="facts"><strong>0 dependencies</strong> · few or no tokens<br>3,500+ tests · MIT</div>
+    </div>
+  </div>
+</body>
+</html>
