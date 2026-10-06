@@ -334,6 +334,14 @@ if (want("marketplace")) {
     if (ferrySession) {
       const http = await import("node:http");
       const { spawn } = await import("node:child_process");
+      // The project folder holds a .claude/settings.json by now (the starter kit wrote one), and
+      // Claude Code 2.1.291 will not run in such a folder until it has been trusted once. The
+      // sandbox config says so, the way the interactive dialog would.
+      const claudeJson = path.join(cfg, ".claude.json");
+      const trust = parse(fs.existsSync(claudeJson) ? fs.readFileSync(claudeJson, "utf8") : "") || {};
+      trust.projects = trust.projects || {};
+      for (const key of new Set([project, project.replace(/\\/g, "/")])) trust.projects[key] = { ...(trust.projects[key] || {}), hasTrustDialogAccepted: true };
+      fs.writeFileSync(claudeJson, JSON.stringify(trust, null, 2) + "\n");
       const seen = [];
       const srv = http.createServer((req, res) => { let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { seen.push(b); res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "fake api" } })); }); });
       await new Promise((r) => srv.listen(0, "127.0.0.1", r));
