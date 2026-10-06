@@ -49,6 +49,14 @@ test("website: every tool, search metadata, nothing loaded from elsewhere", () =
   assert.doesNotMatch(SITE, /<script[^>]+src=|<link[^>]+stylesheet|@import|<img[^>]+src="http/i, "the page is self-contained");
 });
 
+test("website: the numbers under the hero count every tool and match the README's tests", () => {
+  const stat = (label) => new RegExp(`<li><b>([^<]+)</b><span>${label}`).exec(SITE)?.[1];
+  assert.equal(stat("tools"), String(TOOLS.length));
+  const tests = /Over ([\d,]+) automated tests/.exec(README)?.[1];
+  assert.ok(tests, "the README gives a test count");
+  assert.equal(stat("automated tests"), `${tests}+`);
+});
+
 test("website: every command it offers to copy is one the README gives too", () => {
   const commands = [...SITE.matchAll(/data-copy="([^"]+)"/g)].map((m) => m[1]);
   assert.ok(commands.length >= 9, String(commands.length));

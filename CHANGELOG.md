@@ -2,6 +2,10 @@
 
 All notable changes to Claude Code toolkit are written here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+- Website: the numbers under the hero said 9 tools and 3,200+ tests after chat ferry joined; they now say 10 and 3,500+, like the README, and a test keeps them in step. The link preview image lists chat-ferry among the tools and says 3,500+ tests.
+
 ## [1.2.0] - 2026-10-06
 
 - A tenth tool: [claude-chat-ferry](https://github.com/nrzz/claude-chat-ferry) moves a chat between Claude Code, Cursor and Antigravity (and reads Codex CLI, claude.ai and ChatGPT exports). The setup page lists it, the marketplace carries its `chat-ferry` plugin, and the end-to-end test imports an Antigravity conversation as a Claude Code session, exports a session for Cursor, and, with a Claude Code CLI at hand, resumes the imported session through Claude Code against a fake API.
