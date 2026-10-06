@@ -329,15 +329,19 @@ if (want("marketplace")) {
     check("marketplace", "the guardrails plugin's own hook passes npm test in silence", allowed.code === 0 && allowed.out.trim() === "", allowed.out + allowed.err);
     // Does Claude Code continue the session chat-ferry imported? Claude Code is pointed at a fake
     // API on localhost that records the request and answers with an error: nothing is sent
-    // anywhere and no token is spent. The session lives in the main config folder, so that is the
-    // environment used here.
+    // anywhere and no token is spent. It runs in this second config folder, where the plugins
+    // are: the main one holds the cost guard in hard mode over its budget, which holds every
+    // prompt (that is its job, checked above). The session file is copied over for that.
     if (ferrySession) {
       const http = await import("node:http");
       const { spawn } = await import("node:child_process");
+      const copy = path.join(pEnv.CLAUDE_CONFIG_DIR, "projects", path.basename(path.dirname(ferrySession.file)), path.basename(ferrySession.file));
+      fs.mkdirSync(path.dirname(copy), { recursive: true });
+      fs.copyFileSync(ferrySession.file, copy);
       // The project folder holds a .claude/settings.json by now (the starter kit wrote one), and
       // Claude Code 2.1.291 will not run in such a folder until it has been trusted once. The
       // sandbox config says so, the way the interactive dialog would.
-      const claudeJson = path.join(cfg, ".claude.json");
+      const claudeJson = path.join(pEnv.CLAUDE_CONFIG_DIR, ".claude.json");
       const trust = parse(fs.existsSync(claudeJson) ? fs.readFileSync(claudeJson, "utf8") : "") || {};
       trust.projects = trust.projects || {};
       for (const key of new Set([project, project.replace(/\\/g, "/")])) trust.projects[key] = { ...(trust.projects[key] || {}), hasTrustDialogAccepted: true };
@@ -345,19 +349,20 @@ if (want("marketplace")) {
       const seen = [];
       const srv = http.createServer((req, res) => { let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { seen.push(b); res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "fake api" } })); }); });
       await new Promise((r) => srv.listen(0, "127.0.0.1", r));
-      const fakeEnv = { ...ENV, ANTHROPIC_API_KEY: "sk-ant-api03-bogus", ANTHROPIC_BASE_URL: `http://127.0.0.1:${srv.address().port}`, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1", DISABLE_TELEMETRY: "1", DISABLE_ERROR_REPORTING: "1" };
+      const fakeEnv = { ...ENV, ...pEnv, ANTHROPIC_API_KEY: "sk-ant-api03-bogus", ANTHROPIC_BASE_URL: `http://127.0.0.1:${srv.address().port}`, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1", DISABLE_TELEMETRY: "1", DISABLE_ERROR_REPORTING: "1" };
       const argv = ["-p", "--resume", ferrySession.id, "--output-format", "json", "Reply OK. E2E_NEW_PROMPT"];
       const viaShell = process.platform === "win32" && !/\.exe$/i.test(CLAUDE);
       const quoted = [CLAUDE, ...argv].map((a) => (/[\s"&|<>^]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a)).join(" ");
       const child = viaShell ? spawn(quoted, [], { cwd: project, env: fakeEnv, shell: true, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }) : spawn(CLAUDE, argv, { cwd: project, env: fakeEnv, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
       let errText = "";
+      let outText = "";
       child.stderr.on("data", (d) => (errText += d));
-      child.stdout.on("data", () => {});
+      child.stdout.on("data", (d) => (outText += d));
       await new Promise((r) => { const t = setTimeout(() => { child.kill(); r(); }, 120000); child.on("exit", () => { clearTimeout(t); r(); }); });
       srv.close();
       const body = seen.map((b) => parse(b)).find((j) => j?.messages);
       const sent = JSON.stringify(body?.messages || []);
-      check("marketplace", "Claude Code resumes the session chat-ferry imported and sends its turns to the model", !!body && sent.includes("fix the retry loop in client.go") && sent.includes("exponential backoff") && sent.includes("E2E_NEW_PROMPT"), (body ? "" : "no request reached the fake API; ") + errText.slice(0, 300));
+      check("marketplace", "Claude Code resumes the session chat-ferry imported and sends its turns to the model", !!body && sent.includes("fix the retry loop in client.go") && sent.includes("exponential backoff") && sent.includes("E2E_NEW_PROMPT"), (body ? "" : "no request reached the fake API; ") + `stderr: ${errText.slice(0, 300)} stdout: ${outText.slice(0, 300)}`);
     }
     const ping = pluginHook("nudge@claude-code-toolkit", "Notification", { message: "Claude needs your permission to use Bash", notification_type: "permission_prompt" });
     check("marketplace", "the nudge plugin's (notify's) own hook pings on a permission prompt", /permission/.test(parse(ping.out)?.terminalSequence || ""), ping.out + ping.err);
