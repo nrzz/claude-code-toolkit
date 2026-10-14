@@ -71,6 +71,15 @@ test("the state lists all ten tools, the recommended ones switched on, and the g
   assert.equal(st.configDir, s.box.cfg);
 });
 
+test("a kept-alive connection is never timed out: a request the page sends while an install blocks the server is not reset", async (t) => {
+  const s = await start();
+  t.after(() => s.server.close());
+  const res = await s.api("/api/state", undefined, { connection: "keep-alive" });
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.connection, "keep-alive");
+  assert.equal(res.headers["keep-alive"], undefined, "Node advertises a timeout only when it will close idle connections");
+});
+
 test("Install runs each tool's own command, in order, and streams every step", async (t) => {
   const s = await start();
   t.after(() => s.server.close());

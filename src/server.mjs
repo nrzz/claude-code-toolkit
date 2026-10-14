@@ -155,6 +155,10 @@ export function startServer({ sources, env = process.env, project = process.cwd(
   server = http.createServer((req, res) => {
     handle(req, res).catch((err) => { if (!res.headersSent) send(res, 500, { error: err.message }); else res.end(); });
   });
+  // Fetching the tools and running their installers block this process for seconds at a time. Node
+  // would close a kept-alive connection idle for 5 seconds the moment it is free again, before it reads
+  // the request the page sent meanwhile, and the page sees a reset. Connections stay open until Done.
+  server.keepAliveTimeout = 0;
   const idle = setInterval(() => {
     const limit = pageSeen ? idleMs : startMs;
     if (!busy && Date.now() - lastSeen > limit) close();

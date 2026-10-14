@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nrzz.github.io/claude-code-toolkit/sitemap.xml

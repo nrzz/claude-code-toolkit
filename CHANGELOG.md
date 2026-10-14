@@ -4,6 +4,10 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-15
+
+- Setup page: its server no longer times out a kept-alive connection. Fetching the tools and running their installers block the process for seconds, and Node closed an idle connection the moment it was free again, before reading the request the page had sent meanwhile; on a slow machine the page's next request was reset (seen once in the Windows end-to-end run on Claude Code 2.1.300). Connections now stay open until Done, with a test.
+- README: a "Stay in the loop" section. Website: the author in the footer with a Star link, an author tag, `robots.txt` and `sitemap.xml`.
 - Website: the numbers under the hero said 9 tools and 3,200+ tests after chat ferry joined; they now say 10 and 3,500+, like the README, and a test keeps them in step. The link preview image lists chat-ferry among the tools and says 3,500+ tests; its source is now kept in `media/preview.html`, with a test that it names every tool, says how many, and gives the README's test count.
 
 ## [1.2.0] - 2026-10-06

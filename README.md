@@ -130,6 +130,10 @@ node e2e/run.mjs
 
 Every tool welcomes issues and pull requests: each repository has a CONTRIBUTING.md and issue templates, and there are issues labelled [good first issue](https://github.com/search?q=user%3Anrzz+label%3A%22good+first+issue%22+state%3Aopen&type=issues) and [help wanted](https://github.com/search?q=user%3Anrzz+label%3A%22help+wanted%22+state%3Aopen&type=issues) to start with. For the marketplace, the website or the end-to-end test, see [CONTRIBUTING.md](CONTRIBUTING.md). Questions and ideas for new tools go to [Discussions](https://github.com/nrzz/claude-code-toolkit/discussions).
 
+## Stay in the loop
+
+If a tool here saves you tokens, a star on this repository helps other people find it. New tools and releases are announced in [Discussions](https://github.com/nrzz/claude-code-toolkit/discussions), and following [@nrzz](https://github.com/nrzz) on GitHub shows them in your feed.
+
 ## License
 
 MIT
