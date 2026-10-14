@@ -45,7 +45,7 @@ Every tool's README has a "What it costs in tokens" table with the details, and 
 
 ### The plugins, from one marketplace
 
-If you prefer Claude Code's own plugin system, in Claude Code:
+Spendcap (cost guard) is in Anthropic's plugin directory since 14 October 2026, so it installs with nothing to add first: `/plugin install spendcap@anthropic-plugin-directory`, and `/plugin`, Discover, lists it. For all eight, add this marketplace. If you prefer Claude Code's own plugin system, in Claude Code:
 
 ```text
 /plugin marketplace add nrzz/claude-code-toolkit

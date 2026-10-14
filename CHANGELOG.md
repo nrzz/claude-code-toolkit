@@ -4,6 +4,8 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 ## [Unreleased]
 
+- README and website: Spendcap is in Anthropic's plugin directory (published 14 October 2026). The install line from there, `/plugin install spendcap@anthropic-plugin-directory`, was verified with Claude Code 2.1.295 in a throwaway config: version 1.0.1, one hook, no always-on tokens.
+
 ## [1.2.1] - 2026-10-15
 
 - Setup page: its server no longer times out a kept-alive connection. Fetching the tools and running their installers block the process for seconds, and Node closed an idle connection the moment it was free again, before reading the request the page had sent meanwhile; on a slow machine the page's next request was reset (seen once in the Windows end-to-end run on Claude Code 2.1.300). Connections now stay open until Done, with a test.
