@@ -16,7 +16,7 @@ const SITE = read("docs/index.html");
 const TOOLS = [
   "claude-code-handover", "claude-code-team-sync", "claude-code-glow", "claude-code-guardrails", "claude-code-notify",
   "claude-cost-guard", "claude-md-doctor", "claude-code-starter-kits", "claude-session-replay", "claude-chat-ferry",
-  "claude-session-tidy",
+  "claude-session-tidy", "claude-permission-doctor",
 ];
 
 test("marketplace: named claude-code-toolkit, unique plugin names, every field filled", () => {
@@ -44,6 +44,20 @@ test("the setup's catalog names the same repositories as this list, and each plu
     const p = market.plugins.find((x) => x.name === t.plugin);
     assert.ok(p && p.source.url === "https://github.com/nrzz/" + t.repo + ".git", t.id);
   }
+});
+
+test("the version in package.json is the newest one in the CHANGELOG and in the website's What's new", () => {
+  const version = JSON.parse(read("package.json")).version;
+  const log = read("CHANGELOG.md");
+  assert.equal(/^## \[(\d+\.\d+\.\d+)\]/m.exec(log)?.[1], version, "CHANGELOG.md");
+  assert.ok(log.includes(`[${version}]: https://github.com/nrzz/claude-code-toolkit/compare/v`), "the changelog's compare link");
+  assert.equal(/claude-code-toolkit\/releases\/tag\/v(\d+\.\d+\.\d+)">toolkit /.exec(SITE)?.[1], version, "docs/index.html");
+});
+
+test("the always-on token limit the end-to-end test enforces is the one the README and CONTRIBUTING state", () => {
+  const limit = /\(limit (\d+)\)`, total < (\d+)/.exec(read("e2e/run.mjs"));
+  assert.ok(limit && limit[1] === limit[2], "the e2e names its limit and compares against the same number");
+  for (const [name, text] of [["README.md", README], ["CONTRIBUTING.md", read("CONTRIBUTING.md")]]) assert.ok(text.includes(`under ${limit[1]} always-on tokens`), name);
 });
 
 test("README: every tool, and an install line for every plugin", () => {

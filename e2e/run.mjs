@@ -258,6 +258,67 @@ if (want("session-tidy")) {
   check("session-tidy", "uninstall gives settings.json back byte for byte and removes the program copy, keeping the keep list", un.code === 0 && fs.readFileSync(path.join(cfg, "settings.json")).equals(settingsBefore) && !fs.existsSync(path.join(cfg, "session-tidy", "app")) && fs.existsSync(path.join(cfg, "session-tidy", "keep.json")), un.out + un.err);
 }
 
+// ---- permission-doctor: why a prompt appears, dead rules, rules from history ----------------------------
+// Its own config folder and project, so the settings checked at the end stay the user's. The settings hold
+// a prefix rule, a :* rule, a literal rule nobody uses and a deny. The transcript holds a command that ran
+// four times without a rule and two that rules cover. The tool writes only with lint --fix, suggest --write
+// and restore, so none of the five runs below may change a file. The marketplace section reuses this folder.
+const pd = { cfg: path.join(base, "pd", ".claude"), project: path.join(base, "pd", "app") };
+fs.mkdirSync(pd.cfg, { recursive: true });
+fs.mkdirSync(pd.project, { recursive: true });
+if (want("permission-doctor")) {
+  const DAY = 86400000;
+  const settingsFile = path.join(pd.cfg, "settings.json");
+  fs.writeFileSync(settingsFile, JSON.stringify({ permissions: { allow: ["Bash(npm run *)", "Bash(git status:*)", "Bash(make deploy-staging)"], deny: ["Bash(rm -rf *)"] } }, null, 2) + "\n");
+  // lint calls a literal rule dead only when its file is two weeks old and a transcript from the window exists
+  const aged = new Date(Date.now() - 30 * DAY);
+  fs.utimesSync(settingsFile, aged, aged);
+  const transcripts = path.join(pd.cfg, "projects", pd.project.replace(/[^a-zA-Z0-9]/g, "-"));
+  fs.mkdirSync(transcripts, { recursive: true });
+  const sid = "f0f0f0f0-8888-4888-8888-888888888888";
+  const ran = [...Array(4).fill("docker compose up -d"), ...Array(3).fill("git status"), ...Array(3).fill("npm run build")];
+  fs.writeFileSync(path.join(transcripts, `${sid}.jsonl`), ran.flatMap((command, i) => {
+    const id = `toolu_e2e_${i}`;
+    const timestamp = new Date(Date.now() - (ran.length - i) * 3600000).toISOString();
+    return [
+      { type: "assistant", uuid: `pd-a-${i}`, sessionId: sid, cwd: pd.project, timestamp, message: { role: "assistant", content: [{ type: "tool_use", id, name: "Bash", input: { command } }] } },
+      { type: "user", uuid: `pd-u-${i}`, sessionId: sid, cwd: pd.project, timestamp, permissionDecision: { decision: "accept", source: "user_temporary" }, message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content: "ok" }] } },
+    ].map((r) => JSON.stringify(r));
+  }).join("\n") + "\n");
+
+  const before = fs.readFileSync(settingsFile);
+  const doctor = (argv) => tool("claude-permission-doctor", "bin/claude-permission-doctor.mjs", [...argv, "--project", pd.project], { cwd: pd.project, env: { CLAUDE_CONFIG_DIR: pd.cfg } });
+  const runs = {
+    show: doctor(["show", "--json"]),
+    why: doctor(["why", "git status && npm test", "--json"]),
+    deny: doctor(["why", "rm -rf build", "--json"]),
+    lint: doctor(["lint", "--json"]),
+    suggest: doctor(["suggest", "--json"]),
+  };
+  const out = (name) => ({ ...(parse(runs[name].out) || {}), ok: runs[name].code === 0 });
+  const here = (f) => !!f && path.resolve(f) === path.resolve(settingsFile);
+
+  const show = out("show");
+  check("permission-doctor", "show --json lists the four rules with the settings file each is in",
+    show.ok && show.summary?.allow === 3 && show.summary.deny === 1 && show.rules?.length === 4 && show.rules.every((r) => here(r.file))
+      && ["Bash(npm run *)", "Bash(git status:*)", "Bash(make deploy-staging)", "Bash(rm -rf *)"].every((rule) => show.rules.some((r) => r.rule === rule)), runs.show.out + runs.show.err);
+  const why = out("why").decision;
+  check("permission-doctor", "why \"git status && npm test\" --json: a verdict that asks, the :* rule allowing git status and no rule covering npm test, with the rule that would stop the prompt",
+    out("why").ok && why?.verdict === "ask" && why.parts?.length === 2 && why.parts[0].status === "allow" && why.parts[0].rule?.rule === "Bash(git status:*)"
+      && why.parts[1].status === "no-rule" && String(why.fix?.rule).startsWith("Bash(npm test"), runs.why.out + runs.why.err);
+  const denied = out("deny").decision;
+  check("permission-doctor", "why \"rm -rf build\" --json: denied by the deny rule, named with its file", out("deny").ok && denied?.verdict === "deny" && denied.rule?.rule === "Bash(rm -rf *)" && here(denied.rule.file), runs.deny.out + runs.deny.err);
+  const lint = out("lint");
+  const dead = (lint.findings || []).filter((f) => f.id === "dead-rule");
+  check("permission-doctor", "lint --json finds the literal rule nobody used as dead, and calls no prefix rule dead",
+    lint.ok && dead.length === 1 && dead[0].rule === "Bash(make deploy-staging)" && dead[0].autofix === true && lint.summary?.warn >= 1, runs.lint.out + runs.lint.err);
+  const suggest = out("suggest");
+  check("permission-doctor", "suggest --json proposes a prefix rule for the command that ran four times without one, and none for the commands rules cover",
+    suggest.ok && suggest.proposals?.length === 1 && suggest.proposals[0].rule === "Bash(docker compose up *)" && suggest.proposals[0].count === 4, runs.suggest.out + runs.suggest.err);
+  check("permission-doctor", "none of the five runs changed a file: settings.json is the same bytes and no backup was made",
+    fs.readFileSync(settingsFile).equals(before) && fs.readdirSync(pd.cfg).sort().join() === "projects,settings.json", fs.readdirSync(pd.cfg).join());
+}
+
 // ---- starter-kits, then md-doctor on what they wrote -----------------------------------------------
 if (want("starter") || want("md-doctor")) {
   const k = tool("claude-code-starter-kits", "bin/claude-starter.mjs", [], { cwd: project });
@@ -390,6 +451,11 @@ if (want("marketplace")) {
       trust.projects = trust.projects || {};
       for (const key of new Set([project, project.replace(/\\/g, "/")])) trust.projects[key] = { ...(trust.projects[key] || {}), hasTrustDialogAccepted: true };
       fs.writeFileSync(claudeJson, JSON.stringify(trust, null, 2) + "\n");
+      // A skill the model may invoke, to show that skills are listed in the request at all: without it, a
+      // request that mentions no user-only skill would prove nothing.
+      const control = path.join(project, ".claude", "skills", "e2e-control");
+      fs.mkdirSync(control, { recursive: true });
+      fs.writeFileSync(path.join(control, "SKILL.md"), "---\nname: e2e-control\ndescription: A skill the model may invoke, here to show that skills are listed in the request.\n---\nSay control.\n");
       const seen = [];
       const srv = http.createServer((req, res) => { let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { seen.push(b); res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "fake api" } })); }); });
       await new Promise((r) => srv.listen(0, "127.0.0.1", r));
@@ -404,9 +470,27 @@ if (want("marketplace")) {
       child.stdout.on("data", (d) => (outText += d));
       await new Promise((r) => { const t = setTimeout(() => { child.kill(); r(); }, 120000); child.on("exit", () => { clearTimeout(t); r(); }); });
       srv.close();
+      fs.rmSync(control, { recursive: true, force: true });
       const body = seen.map((b) => parse(b)).find((j) => j?.messages);
       const sent = JSON.stringify(body?.messages || []);
       check("marketplace", "Claude Code resumes the session chat-ferry imported and sends its turns to the model", !!body && sent.includes("fix the retry loop in client.go") && sent.includes("exponential backoff") && sent.includes("E2E_NEW_PROMPT"), (body ? "" : "no request reached the fake API; ") + `stderr: ${errText.slice(0, 300)} stdout: ${outText.slice(0, 300)}`);
+      // Every user-only skill of the installed plugins, as plugin:skill (disable-model-invocation in its SKILL.md).
+      const userOnly = [];
+      for (const p of list) {
+        const skills = path.join(p.installPath, "skills");
+        for (const entry of fs.existsSync(skills) ? fs.readdirSync(skills) : []) {
+          const file = path.join(skills, entry, "SKILL.md");
+          const front = /^---\n([\s\S]*?)\n---/.exec(fs.existsSync(file) ? fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n") : "")?.[1] || "";
+          if (/^disable-model-invocation:\s*true\s*$/m.test(front)) userOnly.push(`${p.id.split("@")[0]}:${/^name:\s*(\S+)/m.exec(front)?.[1] || entry}`);
+        }
+      }
+      const requests = seen.map((b) => parse(b)).filter((j) => j?.messages);
+      const mentioned = (needle) => requests.filter((j) => JSON.stringify(j).includes(needle)).length;
+      check("marketplace", "the first request Claude Code sent the model is a real one (a system prompt, a tool list) and lists a skill the model may invoke",
+        !!body?.system && body.tools?.length > 0 && JSON.stringify(body).includes("e2e-control"), `${requests.length} requests; tools: ${body?.tools?.length}`);
+      const listed = userOnly.filter((name) => mentioned(name) > 0);
+      check("marketplace", `with every plugin installed, no request mentions any of the ${userOnly.length} user-only skills (${userOnly.join(", ")}): the estimate counts text the model is never sent`,
+        userOnly.length >= 8 && listed.length === 0, `listed: ${listed.join(", ")}; found ${userOnly.length} user-only skills`);
     }
     const ping = pluginHook("nudge@claude-code-toolkit", "Notification", { message: "Claude needs your permission to use Bash", notification_type: "permission_prompt" });
     check("marketplace", "the nudge plugin's (notify's) own hook pings on a permission prompt", /permission/.test(parse(ping.out)?.terminalSequence || ""), ping.out + ping.err);
@@ -414,13 +498,26 @@ if (want("marketplace")) {
     check("marketplace", "the spendcap plugin's (cost guard's) own hook runs, silent with no budget", budget.code === 0 && budget.out.trim() === "", budget.out + budget.err);
     const tidyHook = pluginHook("session-tidy@claude-code-toolkit", "SessionStart", null);
     check("marketplace", "the session-tidy plugin's own hook runs from the installed copy with nothing on stdin, and prints nothing", tidyHook.code === 0 && tidyHook.out === "" && tidyHook.err === "", tidyHook.out + tidyHook.err);
+    // permission-doctor has no hook. Its plugin is one user-only skill whose two lines starting with an exclamation mark
+    // and a backtick run its command, so run those lines as written, from the installed copy, against the config and
+    // project made above.
+    const pdPlugin = list.find((p) => p.id === "permission-doctor@claude-code-toolkit");
+    const pdSkill = pdPlugin ? fs.readFileSync(path.join(pdPlugin.installPath, "skills", "check", "SKILL.md"), "utf8").replace(/\r\n/g, "\n") : "";
+    const pdLines = pdSkill.split("\n").map((l) => /^!\x60(.*)\x60$/.exec(l)?.[1]).filter(Boolean);
+    const pdReports = pdLines.map((line) => run(line.replaceAll("${CLAUDE_PLUGIN_ROOT}", pdPlugin.installPath).replaceAll("${CLAUDE_PROJECT_DIR}", pd.project), [], { cwd: pd.project, env: { ...pEnv, CLAUDE_CONFIG_DIR: pd.cfg }, shell: true }));
+    check("marketplace", "the permission-doctor plugin's skill runs its lint and suggest reports from the installed copy",
+      pdReports.length === 2 && pdReports.every((r) => r.code === 0 && r.err === "") && /^## permission-doctor lint/m.test(pdReports[0].out) && /^## permission-doctor suggest/m.test(pdReports[1].out)
+        && (!want("permission-doctor") || (pdReports[0].out.includes("make deploy-staging") && pdReports[1].out.includes("docker compose up"))), pdReports.map((r) => r.out + r.err).join("\n---\n"));
     let total = 0;
     for (const name of names) {
       const d = claude(["plugin", "details", `${name}@claude-code-toolkit`]);
       const m = /Always-on:\s+~?(\d+)\s*tok/.exec(d.out);
       total += m ? Number(m[1]) : 1000;
     }
-    check("marketplace", `all plugins together: about ${total} always-on tokens, by Claude Code's own estimate (limit 150)`, total < 150, String(total));
+    // The estimate counts the description of every user-only skill, and Claude Code never sends those to the
+    // model; a new tool's skill adds 15 to 17 to it. So it stays a check, now under 200, and the request that
+    // really went to the model (captured above, with every plugin installed) is checked for those skills too.
+    check("marketplace", `all plugins together: about ${total} always-on tokens, by Claude Code's own estimate (limit 200)`, total < 200, String(total));
     const hud = list.find((p) => p.id === "glowbar@claude-code-toolkit");
     if (hud) {
       const t = claude(["plugin", "test", hud.installPath], 300000);
@@ -481,7 +578,7 @@ if (want("setup")) {
     for (let i = 0; i < 120 && !state?.ready; i++) { state = await (await api("/api/state")).json(); if (!state.ready) await new Promise((r) => setTimeout(r, 500)); }
     // The four installed above; project tools depend on what earlier sections left in the project.
     const userInstalled = (state?.tools || []).filter((t) => t.scope === "user" && t.installed).map((t) => t.id);
-    check("setup", "it fetched all eleven tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
+    check("setup", "it fetched all twelve tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
       JSON.stringify({ failed: state?.failed, userInstalled, glowThemes: state?.glowThemes?.length }));
     const applied = await (await api("/api/apply", { choices: { glow: { enabled: true, options: { theme: "nord", icons: "unicode", uiTheme: true } }, notify: { enabled: false } } })).text();
     const last = parse(applied.trim().split("\n").pop());
@@ -522,6 +619,6 @@ if (!results.length) failed.push({ area: "e2e", what: `no checks ran${only.lengt
 const passed = results.filter((r) => r.ok).length;
 console.log(results.length
   ? `\n${passed} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map((f) => `${f.area}: ${f.what}`).join("; ")}` : ""}.`
-  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
+  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, permission-doctor, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
 if (!args.includes("--keep")) fs.rmSync(base, { recursive: true, force: true });
 process.exitCode = failed.length ? 1 : 0;

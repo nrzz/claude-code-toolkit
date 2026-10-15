@@ -123,6 +123,19 @@
         "url": "https://github.com/nrzz/claude-session-tidy.git"
       },
       "homepage": "https://github.com/nrzz/claude-session-tidy"
+    },
+    {
+      "name": "permission-doctor",
+      "description": "Explain why Claude Code asked for permission, find dead and shadowed allow, ask and deny rules, and propose rules from the commands that ran without one (/permission-doctor:check runs the lint and suggest reports for this project and answers in at most 10 lines). The claude-permission-doctor command does the same from a terminal, at no token cost. The skill is user-only and costs about 850 tokens when you run it.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "security",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-permission-doctor.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-permission-doctor"
     }
   ]
 }

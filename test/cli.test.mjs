@@ -28,6 +28,7 @@ test("arguments: tools by name, groups and aliases; flags as each tool's options
   assert.equal(pickTools(["all"]).length, 8);
   assert.deepEqual(pickTools(["session-tidy", "guardrails"]), ["guardrails", "session-tidy"], "in the fixed order");
   assert.throws(() => pickTools(["md-doctor"]), /no tool "md-doctor"/);
+  assert.throws(() => pickTools(["permission-doctor"]), /no tool "permission-doctor"/, "tools that only run on demand are not installed from here");
   assert.deepEqual(optionsFromFlags("glow", { theme: "nord", "no-ui-theme": true }), { theme: "nord", uiTheme: false });
   assert.deepEqual(optionsFromFlags("notify", { ntfy: "auto", "min-turn-seconds": "45" }), { ntfy: "auto", minTurnSeconds: 45 });
 });
@@ -84,6 +85,7 @@ test("uninstall all removes what is installed; status describes it", async () =>
   assert.match(status.out, /Guardrails\s+installed \(preset relaxed\)/);
   assert.match(status.out, /Cost guard\s+installed \(no budget set\)/);
   assert.match(status.out, /Session tidy\s+installed\n/);
+  assert.match(status.out, /Permission doctor\s+runs on demand\n/);
   const r = await run(["uninstall", "all", "--source", tools.dir], env, project);
   assert.equal(r.code, 0, r.err);
   assert.deepEqual(tools.calls().map((c) => c.args.join(" ")), ["uninstall --scope user", "uninstall", "uninstall", "uninstall", "uninstall"]);

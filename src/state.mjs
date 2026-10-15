@@ -90,6 +90,7 @@ export function readState({ env = process.env, project = process.cwd() } = {}) {
     "md-doctor": { installed: false, current: {} },
     replay: { installed: false, current: {} },
     "chat-ferry": { installed: false, current: {} },
+    "permission-doctor": { installed: false, current: {} },
   };
   for (const t of TOOLS) {
     // A tool's plugin under its name from any marketplace, or under its name until 4 October 2026 from our own

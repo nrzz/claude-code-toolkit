@@ -60,11 +60,11 @@ test("requests for another host name, from another origin, or without the token 
   assert.equal((await s.api("/api/state")).status, 200);
 });
 
-test("the state lists all eleven tools, the recommended ones switched on, and the glow themes", async (t) => {
+test("the state lists all twelve tools, the recommended ones switched on, and the glow themes", async (t) => {
   const s = await start();
   t.after(() => s.server.close());
   const st = JSON.parse((await s.api("/api/state")).text);
-  assert.equal(st.tools.length, 11);
+  assert.equal(st.tools.length, 12);
   assert.equal(st.ready, true);
   assert.deepEqual(st.glowThemes.map((x) => x.slug), ["classic", "nord"]);
   assert.deepEqual(Object.entries(st.choices).filter(([, c]) => c.enabled).map(([id]) => id), ["guardrails", "notify", "glow"]);
@@ -127,6 +127,21 @@ test("Run now actions run in the project; unknown ones are refused; another proj
   assert.equal((await s.api("/api/project", { dir: `${s.box.project}/missing` })).status, 400);
   const moved = JSON.parse((await s.api("/api/project", { dir: s.box.home })).text);
   assert.equal(moved.project.dir, s.box.home);
+});
+
+test("permission doctor is offered like md-doctor: three buttons, no switch, each run in the project", async (t) => {
+  const s = await start();
+  t.after(() => s.server.close());
+  const st = JSON.parse((await s.api("/api/state")).text);
+  const tool = st.tools.find((x) => x.id === "permission-doctor");
+  assert.deepEqual([tool.scope, tool.installed, tool.removable, tool.recommended], ["action", false, false, false]);
+  assert.deepEqual(tool.actions.map((a) => a.id), ["show", "lint", "suggest"]);
+  assert.equal(st.choices["permission-doctor"], undefined, "an on-demand tool has nothing to switch on");
+  for (const id of ["show", "lint", "suggest"]) assert.equal(JSON.parse((await s.api("/api/action", { tool: "permission-doctor", action: id })).text).ok, true, id);
+  assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), ["show", "lint", "suggest"].map((id) => ["claude-permission-doctor", id, "--project", s.box.project]));
+  const apply = await s.api("/api/apply", { choices: { "permission-doctor": { enabled: true } } });
+  assert.equal(JSON.parse(apply.text.trim().split("\n").pop()).ok, true);
+  assert.equal(s.tools.calls().length, 3, "Apply has nothing to run for it");
 });
 
 test("Done stops the server", async () => {

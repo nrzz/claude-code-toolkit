@@ -7,7 +7,7 @@ const v = (id, o, ctx) => byId(id).validate(o, ctx);
 const bad = (id, o, re, ctx) => assert.throws(() => v(id, o, ctx), (e) => e instanceof OptionError && re.test(e.message));
 
 test("every tool has a repository, a command file, a summary, a token note and valid defaults", () => {
-  assert.equal(TOOLS.length, 11);
+  assert.equal(TOOLS.length, 12);
   for (const t of TOOLS) {
     assert.match(t.repo, /^claude-[a-z-]+$/, t.id);
     assert.match(t.bin, /\.mjs$/, t.id);
@@ -38,6 +38,16 @@ test("session tidy: init and uninstall with no options, a list to look at, and n
   assert.deepEqual(t.change(v("session-tidy", {}), {}), [], "so there is never anything to change");
   assert.deepEqual(t.uninstall(), [["uninstall"]]);
   assert.deepEqual(t.actions.list.args({}, { project: "/work/app" }), ["list", "--project", "/work/app"]);
+});
+
+test("permission doctor: an on-demand tool like md-doctor, with nothing to install and three commands that only read, run in the project", () => {
+  const t = byId("permission-doctor");
+  assert.deepEqual([t.scope, t.plugin, !!t.recommended, t.install, t.change, t.uninstall], ["action", undefined, false, undefined, undefined, undefined]);
+  assert.deepEqual(v("permission-doctor", { preset: "ignored" }), {}, "it has no options");
+  assert.deepEqual(Object.keys(t.actions), ["show", "lint", "suggest"]);
+  const ctx = { project: "/work/app" };
+  assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["show", "--project", "/work/app"], ["lint", "--project", "/work/app"], ["suggest", "--project", "/work/app"]]);
+  for (const a of Object.values(t.actions)) assert.equal(a.args({}, ctx).some((x) => /^--(fix|write|dry-run)$/.test(x)), false, "the page never edits a settings file");
 });
 
 test("notify: a set line only for what differs, secrets kept unless replaced, an existing ntfy topic kept", () => {

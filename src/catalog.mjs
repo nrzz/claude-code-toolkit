@@ -1,4 +1,4 @@
-// The eleven tools: where each lives, what it asks, and the exact command lines that install,
+// The twelve tools: where each lives, what it asks, and the exact command lines that install,
 // change and remove it. Every command line is an argument array for the tool's own CLI, never a
 // shell string, so nothing a person types can become a command.
 
@@ -211,6 +211,18 @@ export const TOOLS = [
     defaults: {},
     validate: () => ({}),
     actions: { list: { label: "This project's chats in every tool", args: (o, ctx) => ["list", "--project", ctx.project] } },
+  },
+  {
+    id: "permission-doctor", repo: "claude-permission-doctor", bin: "bin/claude-permission-doctor.mjs", scope: "action",
+    name: "Permission doctor", tokens: "0: runs outside Claude",
+    summary: "Why a permission prompt appeared: the rule that allowed, asked about or denied each part of a command, or the one rule that would stop it. Finds dead and hidden rules, and proposes rules from the commands that ran without one.",
+    defaults: {},
+    validate: () => ({}),
+    actions: {
+      show: { label: "Show this project's rules", args: (o, ctx) => ["show", "--project", ctx.project] },
+      lint: { label: "Check the rules", args: (o, ctx) => ["lint", "--project", ctx.project] },
+      suggest: { label: "Suggest rules from history", args: (o, ctx) => ["suggest", "--project", ctx.project] },
+    },
   },
 ];
 
