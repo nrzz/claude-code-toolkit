@@ -214,6 +214,50 @@ if (want("chat-ferry")) {
   check("chat-ferry", "list shows the imported session", list.code === 0 && list.out.includes(id.slice(0, 8)), list.out + list.err);
 }
 
+// ---- session-tidy: sessions listed, kept, deleted and restored, and its SessionStart hook ----------------
+// Two sessions made old on purpose in the throwaway config: one is kept (which touches it), the other goes
+// to the trash and comes back byte for byte. Then init adds the hook, which is run as settings.json lists
+// it, and uninstall must give settings.json back exactly as it was.
+if (want("session-tidy")) {
+  const DAY = 86400000;
+  const tidy = (argv, opts) => tool("claude-session-tidy", "bin/claude-session-tidy.mjs", argv, { cwd: project, ...opts });
+  const keptId = "d0d0d0d0-6666-4666-8666-666666666666", goneId = "b0b0b0b0-7777-4777-8777-777777777777";
+  const fileOf = (id) => path.join(cfg, "projects", project.replace(/[^a-zA-Z0-9]/g, "-"), `${id}.jsonl`);
+  const age = (id, days) => { const t = new Date(Date.now() - days * DAY); fs.utimesSync(fileOf(id), t, t); };
+  writeSession(project, keptId, { prompts: 3, day: new Date(Date.now() - 20 * DAY) });
+  writeSession(project, goneId, { prompts: 2, day: new Date(Date.now() - 10 * DAY) });
+  age(keptId, 20);
+  age(goneId, 10);
+
+  const listing = parse(tidy(["list", "--json"]).out);
+  const row = (id) => listing?.sessions?.find((s) => s.id === id);
+  check("session-tidy", "list --json shows both sessions with the days left before the 30-day cleanup",
+    Math.abs((row(keptId)?.sweep?.daysLeft ?? -99) - 10) <= 1 && Math.abs((row(goneId)?.sweep?.daysLeft ?? -99) - 20) <= 1, JSON.stringify(listing?.sessions?.map((s) => [s.short, s.sweep])));
+
+  const touched = fs.statSync(fileOf(keptId)).mtimeMs;
+  const keep = tidy(["keep", keptId.slice(0, 8), "--json"]);
+  check("session-tidy", "keep touches the session, so the cleanup's 30 days start again", keep.code === 0 && fs.statSync(fileOf(keptId)).mtimeMs - touched > 19 * DAY, keep.out + keep.err);
+
+  const original = fs.readFileSync(fileOf(goneId));
+  const modified = fs.statSync(fileOf(goneId)).mtimeMs;
+  const dry = tidy(["delete", goneId.slice(0, 8), "--dry-run", "--json"]);
+  check("session-tidy", "delete --dry-run names the session and moves nothing", dry.code === 0 && parse(dry.out)?.dryRun === true && fs.existsSync(fileOf(goneId)), dry.out + dry.err);
+  const del = tidy(["delete", goneId.slice(0, 8), "--json"]);
+  check("session-tidy", "delete moves the session to the trash, out of projects/", del.code === 0 && !fs.existsSync(fileOf(goneId)) && fs.existsSync(path.join(cfg, "session-tidy", "trash", goneId, "manifest.json")), del.out + del.err);
+  const back = tidy(["restore", goneId.slice(0, 8), "--json"]);
+  check("session-tidy", "restore brings it back byte for byte, with its file time", back.code === 0 && fs.existsSync(fileOf(goneId)) && fs.readFileSync(fileOf(goneId)).equals(original) && Math.abs(fs.statSync(fileOf(goneId)).mtimeMs - modified) < 2, back.out + back.err);
+
+  const settingsBefore = fs.readFileSync(path.join(cfg, "settings.json"));
+  const init = tidy(["init"]);
+  const entries = JSON.stringify(readSettings().hooks?.SessionStart || []).split("session-tidy/app/bin/claude-session-tidy.mjs").length - 1;
+  check("session-tidy", "init adds one SessionStart hook that runs the installed copy", init.code === 0 && entries === 1, init.out + init.err + entries);
+  age(keptId, 20);
+  const hook = runHooks("SessionStart", { source: "startup" }, { cwd: project, match: ours("session-tidy") })[0];
+  check("session-tidy", "the hook runs as settings.json lists it, prints nothing, and touches the kept session again", hook?.code === 0 && hook.out === "" && hook.err === "" && Date.now() - fs.statSync(fileOf(keptId)).mtimeMs < DAY, `${hook?.out}${hook?.err}`);
+  const un = tidy(["uninstall"]);
+  check("session-tidy", "uninstall gives settings.json back byte for byte and removes the program copy, keeping the keep list", un.code === 0 && fs.readFileSync(path.join(cfg, "settings.json")).equals(settingsBefore) && !fs.existsSync(path.join(cfg, "session-tidy", "app")) && fs.existsSync(path.join(cfg, "session-tidy", "keep.json")), un.out + un.err);
+}
+
 // ---- starter-kits, then md-doctor on what they wrote -----------------------------------------------
 if (want("starter") || want("md-doctor")) {
   const k = tool("claude-code-starter-kits", "bin/claude-starter.mjs", [], { cwd: project });
@@ -320,7 +364,7 @@ if (want("marketplace")) {
       if (!h) return { code: -1, out: "", err: `${id} has no ${event} hook` };
       const dataDir = path.join(pHome, "plugin-data", id.replace(/[^\w-]/g, "-"));
       const expand = (s) => s.replaceAll("${CLAUDE_PLUGIN_ROOT}", p.installPath).replaceAll("${CLAUDE_PLUGIN_DATA}", dataDir);
-      const input = JSON.stringify({ session_id: "e2e-plugin", transcript_path: "", cwd: project, hook_event_name: event, ...payload });
+      const input = payload === null ? "" : JSON.stringify({ session_id: "e2e-plugin", transcript_path: "", cwd: project, hook_event_name: event, ...payload });
       return run(expand(h.command), (h.args || []).map(expand), { cwd: project, input, env: { ...pEnv, CLAUDE_PLUGIN_ROOT: p.installPath, CLAUDE_PLUGIN_DATA: dataDir } });
     };
     const denied = pluginHook("guardrails@claude-code-toolkit", "PreToolUse", { tool_name: "Bash", tool_input: { command: "rm -rf /" } });
@@ -368,6 +412,8 @@ if (want("marketplace")) {
     check("marketplace", "the nudge plugin's (notify's) own hook pings on a permission prompt", /permission/.test(parse(ping.out)?.terminalSequence || ""), ping.out + ping.err);
     const budget = pluginHook("spendcap@claude-code-toolkit", "UserPromptSubmit", { prompt: "hi", source: "user" });
     check("marketplace", "the spendcap plugin's (cost guard's) own hook runs, silent with no budget", budget.code === 0 && budget.out.trim() === "", budget.out + budget.err);
+    const tidyHook = pluginHook("session-tidy@claude-code-toolkit", "SessionStart", null);
+    check("marketplace", "the session-tidy plugin's own hook runs from the installed copy with nothing on stdin, and prints nothing", tidyHook.code === 0 && tidyHook.out === "" && tidyHook.err === "", tidyHook.out + tidyHook.err);
     let total = 0;
     for (const name of names) {
       const d = claude(["plugin", "details", `${name}@claude-code-toolkit`]);
@@ -435,7 +481,7 @@ if (want("setup")) {
     for (let i = 0; i < 120 && !state?.ready; i++) { state = await (await api("/api/state")).json(); if (!state.ready) await new Promise((r) => setTimeout(r, 500)); }
     // The four installed above; project tools depend on what earlier sections left in the project.
     const userInstalled = (state?.tools || []).filter((t) => t.scope === "user" && t.installed).map((t) => t.id);
-    check("setup", "it fetched all ten tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
+    check("setup", "it fetched all eleven tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
       JSON.stringify({ failed: state?.failed, userInstalled, glowThemes: state?.glowThemes?.length }));
     const applied = await (await api("/api/apply", { choices: { glow: { enabled: true, options: { theme: "nord", icons: "unicode", uiTheme: true } }, notify: { enabled: false } } })).text();
     const last = parse(applied.trim().split("\n").pop());
@@ -476,6 +522,6 @@ if (!results.length) failed.push({ area: "e2e", what: `no checks ran${only.lengt
 const passed = results.filter((r) => r.ok).length;
 console.log(results.length
   ? `\n${passed} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map((f) => `${f.area}: ${f.what}`).join("; ")}` : ""}.`
-  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
+  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
 if (!args.includes("--keep")) fs.rmSync(base, { recursive: true, force: true });
 process.exitCode = failed.length ? 1 : 0;

@@ -7,7 +7,7 @@ const v = (id, o, ctx) => byId(id).validate(o, ctx);
 const bad = (id, o, re, ctx) => assert.throws(() => v(id, o, ctx), (e) => e instanceof OptionError && re.test(e.message));
 
 test("every tool has a repository, a command file, a summary, a token note and valid defaults", () => {
-  assert.equal(TOOLS.length, 10);
+  assert.equal(TOOLS.length, 11);
   for (const t of TOOLS) {
     assert.match(t.repo, /^claude-[a-z-]+$/, t.id);
     assert.match(t.bin, /\.mjs$/, t.id);
@@ -28,6 +28,16 @@ test("install, change and uninstall command lines", () => {
   assert.deepEqual(byId("starter-kits").install(v("starter-kits", { stack: "go", merge: true }), ctx), [["--dir", "/work/app", "go", "--merge"]]);
   assert.deepEqual(byId("guardrails").uninstall(), [["uninstall", "--scope", "user"]]);
   assert.equal(byId("team-sync").uninstall, null, "project tools are not removed from here");
+});
+
+test("session tidy: init and uninstall with no options, a list to look at, and not in the recommended set", () => {
+  const t = byId("session-tidy");
+  assert.deepEqual([t.scope, t.plugin, t.recommended], ["user", "session-tidy", false]);
+  assert.deepEqual(t.install(v("session-tidy", {})), [["init"]]);
+  assert.deepEqual(t.install(v("session-tidy", { preset: "ignored" })), [["init"]], "init takes no options");
+  assert.deepEqual(t.change(v("session-tidy", {}), {}), [], "so there is never anything to change");
+  assert.deepEqual(t.uninstall(), [["uninstall"]]);
+  assert.deepEqual(t.actions.list.args({}, { project: "/work/app" }), ["list", "--project", "/work/app"]);
 });
 
 test("notify: a set line only for what differs, secrets kept unless replaced, an existing ntfy topic kept", () => {

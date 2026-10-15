@@ -75,6 +75,7 @@ export function installedSettings(cfg) {
         { hooks: [{ type: "command", command: "node", args: [p("notify", "app", "notify.mjs"), "UserPromptSubmit"] }] },
         { hooks: [{ type: "command", command: "node", args: [p("cost-guard", "app", "guard.mjs"), "prompt"] }] },
       ],
+      SessionStart: [{ hooks: [{ type: "command", command: "node", args: [p("session-tidy", "app", "bin", "claude-session-tidy.mjs"), "refresh", "--quiet"], timeout: 10 }] }],
     },
   };
 }

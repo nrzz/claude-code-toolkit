@@ -9,6 +9,7 @@ const SHORT = {
   notify: "a ping when Claude needs you or finishes",
   glow: "themes, and a status line with a context meter",
   "cost-guard": "daily and weekly token budgets",
+  "session-tidy": "delete, keep and restore sessions before the 30-day cleanup",
   handover: "short sessions with a handover file",
   "team-sync": "share sessions with coworkers",
   "starter-kits": "a lean, safe .claude/ for your stack",

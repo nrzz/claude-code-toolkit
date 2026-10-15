@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { TOOLS as CATALOG } from "../src/catalog.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8").replace(/\r\n/g, "\n");
@@ -15,6 +16,7 @@ const SITE = read("docs/index.html");
 const TOOLS = [
   "claude-code-handover", "claude-code-team-sync", "claude-code-glow", "claude-code-guardrails", "claude-code-notify",
   "claude-cost-guard", "claude-md-doctor", "claude-code-starter-kits", "claude-session-replay", "claude-chat-ferry",
+  "claude-session-tidy",
 ];
 
 test("marketplace: named claude-code-toolkit, unique plugin names, every field filled", () => {
@@ -33,6 +35,14 @@ test("marketplace: every source is an https clone of a toolkit repository", () =
     const m = /^https:\/\/github\.com\/nrzz\/([\w.-]+)\.git$/.exec(p.source.url);
     assert.ok(m && TOOLS.includes(m[1]), `${p.name}: ${p.source.url}`);
     assert.ok(p.homepage.startsWith(`https://github.com/nrzz/${m[1]}`), `${p.name}: ${p.homepage}`);
+  }
+});
+
+test("the setup's catalog names the same repositories as this list, and each plugin it names is in the marketplace from its repository", () => {
+  assert.deepEqual(CATALOG.map((t) => t.repo).sort(), [...TOOLS].sort());
+  for (const t of CATALOG.filter((x) => x.plugin)) {
+    const p = market.plugins.find((x) => x.name === t.plugin);
+    assert.ok(p && p.source.url === "https://github.com/nrzz/" + t.repo + ".git", t.id);
   }
 });
 

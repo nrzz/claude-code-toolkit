@@ -1,4 +1,4 @@
-// The ten tools: where each lives, what it asks, and the exact command lines that install,
+// The eleven tools: where each lives, what it asks, and the exact command lines that install,
 // change and remove it. Every command line is an argument array for the tool's own CLI, never a
 // shell string, so nothing a person types can become a command.
 
@@ -124,6 +124,18 @@ export const TOOLS = [
     },
     uninstall: () => [["uninstall"]],
     actions: { today: { label: "Spend today", args: () => ["today"] }, report: { label: "Last 7 days", args: () => ["report", "--days", "7"] } },
+  },
+  {
+    id: "session-tidy", repo: "claude-session-tidy", bin: "bin/claude-session-tidy.mjs", scope: "user", plugin: "session-tidy",
+    name: "Session tidy", tokens: "0: runs outside Claude",
+    summary: "Delete, keep and restore your sessions before Claude Code's 30-day cleanup removes them: a trash you can restore from, a keep list that outlives the cleanup, and empty or orphaned sessions found for you. Adds one silent hook that refreshes the sessions you keep.",
+    recommended: false,
+    defaults: {},
+    validate: () => ({}),
+    install: () => [["init"]],
+    change: () => [],
+    uninstall: () => [["uninstall"]],
+    actions: { list: { label: "This project's sessions", args: (o, ctx) => ["list", "--project", ctx.project] } },
   },
   {
     id: "handover", repo: "claude-code-handover", bin: "bin/claude-handover.mjs", scope: "project",

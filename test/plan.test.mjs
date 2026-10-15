@@ -18,6 +18,7 @@ test("installs in a fixed order, settings tools before project tools, with reada
     glow: { enabled: true, options: { theme: "classic" } },
     guardrails: { enabled: true, options: {} },
     notify: { enabled: true, options: { slack: "https://hooks.slack.com/services/T/B/x" } },
+    "session-tidy": { enabled: true, options: {} },
   }, { project });
   assert.deepEqual(p.errors, []);
   assert.deepEqual(args(p), [
@@ -26,9 +27,10 @@ test("installs in a fixed order, settings tools before project tools, with reada
     ["notify", "set", "desktop", "on"],
     ["notify", "set", "slack.url", "https://hooks.slack.com/services/T/B/x"],
     ["glow", "install", "--theme", "classic", "--icons", "unicode"],
+    ["session-tidy", "init"],
     ["starter-kits", "--dir", project, "node"],
   ]);
-  assert.deepEqual(p.steps.map((x) => x.label), ["Install Guardrails", "Install Notify", "Notify: set desktop on", "Notify: set slack.url <URL>", "Install Glow", "Install Starter kit"]);
+  assert.deepEqual(p.steps.map((x) => x.label), ["Install Guardrails", "Install Notify", "Notify: set desktop on", "Notify: set slack.url <URL>", "Install Glow", "Install Session tidy", "Install Starter kit"]);
   assert.equal(p.steps.at(-1).cwd, project, "project tools run in the project");
 });
 
@@ -43,7 +45,10 @@ test("installed tools: only what changed runs, switched-off ones are removed, un
   }, { project });
   assert.deepEqual(args(p), [["guardrails", "preset", "strict", "--scope", "user"], ["notify", "uninstall"]]);
   assert.equal(p.steps[1].label, "Remove Notify");
-  assert.deepEqual(args(plan(s, removal(s, ["all"]), { project })), [["guardrails", "uninstall", "--scope", "user"], ["notify", "uninstall"], ["glow", "uninstall"], ["cost-guard", "uninstall"]]);
+  assert.deepEqual(args(plan(s, removal(s, ["all"]), { project })), [["guardrails", "uninstall", "--scope", "user"], ["notify", "uninstall"], ["glow", "uninstall"], ["cost-guard", "uninstall"], ["session-tidy", "uninstall"]]);
+  assert.deepEqual(args(plan(s, { "session-tidy": { enabled: true, options: {} } }, { project })), [], "installed, with no options: nothing to change");
+  assert.deepEqual(args(plan(s, { "session-tidy": { enabled: false } }, { project })), [["session-tidy", "uninstall"]]);
+  assert.equal(plan(s, { "session-tidy": { enabled: false } }, { project }).steps[0].label, "Remove Session tidy");
 });
 
 test("uninstall handover removes only what it put in your settings; a switch never removes project files", () => {
@@ -67,6 +72,13 @@ test("problems are reported before anything runs", () => {
   assert.match(plan(nowhere, { handover: { enabled: true } }).errors[0], /choose a project folder/);
   const home = readState({ env: { ...env }, project: os.homedir() });
   assert.match(plan(home, { "starter-kits": { enabled: true } }).errors[0], /not your home folder/);
+});
+
+test("session tidy installed as a plugin is left to /plugin: init is not run next to the plugin's own hook", () => {
+  const { env, project } = sandbox({ enabledPlugins: { "session-tidy@claude-code-toolkit": true } });
+  const p = plan(readState({ env, project }), { "session-tidy": { enabled: true } }, { project });
+  assert.deepEqual(p.steps, []);
+  assert.match(p.notes.join(" "), /Session tidy is installed as a Claude Code plugin/);
 });
 
 test("a project tool already set up, or a tool installed as a plugin, is left alone", () => {

@@ -4,6 +4,11 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-15
+
+- An eleventh tool: [claude-session-tidy](https://github.com/nrzz/claude-session-tidy) lists, deletes, keeps and restores your Claude Code sessions before the 30-day cleanup removes them. The setup page lists it (switching it on runs its `init`, which adds one silent `SessionStart` hook; it is not in the recommended set), and the marketplace carries its `session-tidy` plugin. The end-to-end test makes two old sessions, keeps one, deletes the other and restores it byte for byte, adds the hook, runs it as `settings.json` lists it and takes it out again with `settings.json` back byte for byte, and, with a Claude Code CLI at hand, runs the plugin's own hook from the installed copy.
+- Always-on tokens: all nine plugins together add about 148 by Claude Code's own estimate (the eight before added 133), under the 150 the end-to-end test allows. The tool's skill description would have made it exactly 150, so it was shortened in claude-session-tidy 1.0.1 rather than raising the limit.
+- Website and README: eleven tools, nine plugins, the new tool's card and rows, over 3,700 tests, and the preview images say eleven. A test now checks that the setup's catalog and the list of repositories agree, and that each plugin the catalog names is in the marketplace from its repository.
 - README and website: Spendcap is in Anthropic's plugin directory (published 14 October 2026). The install line from there, `/plugin install spendcap@anthropic-plugin-directory`, was verified with Claude Code 2.1.295 in a throwaway config: version 1.0.1, one hook, no always-on tokens.
 
 ## [1.2.1] - 2026-10-15
@@ -37,6 +42,8 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 - First release: one plugin marketplace for glow, glow-hud, guardrails, notify, cost-guard, md-doctor and replay; the website; an end-to-end test that installs all nine tools from GitHub, runs their hooks, installs the plugins with Claude Code's own commands and checks that uninstalling restores the user's settings.
 
+[1.3.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.2.1...v1.3.0
+[1.2.1]: https://github.com/nrzz/claude-code-toolkit/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/nrzz/claude-code-toolkit/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/nrzz/claude-code-toolkit/compare/v1.1.0...v1.1.1

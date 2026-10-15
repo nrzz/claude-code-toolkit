@@ -80,6 +80,7 @@ export function readState({ env = process.env, project = process.cwd() } = {}) {
       otherStatusLine: statusCmd !== "" && !statusCmd.includes("claude-code-glow"),
     },
     "cost-guard": { installed: has("cost-guard/app/guard.mjs"), current: { daily: amountText(g.daily), weekly: amountText(g.weekly), mode: g.mode === "hard" ? "hard" : "soft" } },
+    "session-tidy": { installed: has("session-tidy/app/bin/claude-session-tidy.mjs"), current: {} },
     handover: {
       installed: inProject("HANDOVER.md"), userLevel: has("claude-code-handover/scripts/context-guard.mjs"),
       current: { models: "Opus + Sonnet", streams: "main" },

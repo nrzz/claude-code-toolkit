@@ -110,6 +110,19 @@
         "url": "https://github.com/nrzz/claude-chat-ferry.git"
       },
       "homepage": "https://github.com/nrzz/claude-chat-ferry"
+    },
+    {
+      "name": "session-tidy",
+      "description": "List this project's sessions with their size and the day Claude Code's 30-day cleanup removes each (/session-tidy:list), then delete one to a trash you can restore from, or keep it past the cleanup. A silent hook refreshes the sessions you keep: 0 tokens. The skill is user-only and costs about 1,400 tokens when you run it.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-session-tidy.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-session-tidy"
     }
   ]
 }

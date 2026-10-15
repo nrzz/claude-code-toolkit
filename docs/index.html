@@ -4,21 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude Code toolkit: open-source plugins that save tokens</title>
-<meta name="description" content="Ten small, open-source tools for Claude Code: themes and a HUD, safety guardrails, notifications, token budgets, a CLAUDE.md doctor, session replays, chat moves to Cursor and Antigravity, team session sharing, starter kits and handovers. No dependencies, few or no tokens.">
+<meta name="description" content="Eleven small, open-source tools for Claude Code: themes and a HUD, safety guardrails, notifications, token budgets, a CLAUDE.md doctor, session replays, session cleanup with restore, chat moves to Cursor and Antigravity, team session sharing, starter kits and handovers. No dependencies, few or no tokens.">
 <link rel="canonical" href="https://nrzz.github.io/claude-code-toolkit/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Claude Code toolkit">
-<meta property="og:description" content="Ten small, open-source tools that make Claude Code cheaper, safer and easier to share. No dependencies, few or no tokens, tested together on Windows, macOS and Linux.">
+<meta property="og:description" content="Eleven small, open-source tools that make Claude Code cheaper, safer and easier to share. No dependencies, few or no tokens, tested together on Windows, macOS and Linux.">
 <meta property="og:url" content="https://nrzz.github.io/claude-code-toolkit/">
 <meta property="og:site_name" content="Claude Code toolkit">
 <meta property="og:image" content="https://nrzz.github.io/claude-code-toolkit/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Claude Code toolkit: ten small tools that make Claude Code cheaper, safer and easier to share. npx -y github:nrzz/claude-code-toolkit">
+<meta property="og:image:alt" content="Claude Code toolkit: eleven small tools that make Claude Code cheaper, safer and easier to share. npx -y github:nrzz/claude-code-toolkit">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://nrzz.github.io/claude-code-toolkit/og.png">
 <meta name="twitter:title" content="Claude Code toolkit">
-<meta name="twitter:description" content="Ten small, open-source tools that make Claude Code cheaper, safer and easier to share.">
+<meta name="twitter:description" content="Eleven small, open-source tools that make Claude Code cheaper, safer and easier to share.">
 <meta name="author" content="Naresh Prabu (nrzz)">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d97757'/%3E%3Cpath d='M9 11l6 5-6 5M17 22h7' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -38,7 +38,8 @@
     {"@type": "ListItem", "position": 7, "item": {"@type": "SoftwareSourceCode", "name": "claude-md-doctor", "codeRepository": "https://github.com/nrzz/claude-md-doctor", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
     {"@type": "ListItem", "position": 8, "item": {"@type": "SoftwareSourceCode", "name": "claude-code-starter-kits", "codeRepository": "https://github.com/nrzz/claude-code-starter-kits", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
     {"@type": "ListItem", "position": 9, "item": {"@type": "SoftwareSourceCode", "name": "claude-session-replay", "codeRepository": "https://github.com/nrzz/claude-session-replay", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
-    {"@type": "ListItem", "position": 10, "item": {"@type": "SoftwareSourceCode", "name": "claude-chat-ferry", "codeRepository": "https://github.com/nrzz/claude-chat-ferry", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}}
+    {"@type": "ListItem", "position": 10, "item": {"@type": "SoftwareSourceCode", "name": "claude-chat-ferry", "codeRepository": "https://github.com/nrzz/claude-chat-ferry", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 11, "item": {"@type": "SoftwareSourceCode", "name": "claude-session-tidy", "codeRepository": "https://github.com/nrzz/claude-session-tidy", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}}
   ]
 }
 </script>
@@ -177,16 +178,16 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <main>
   <div class="wrap hero">
     <h1>Claude Code, cheaper, safer and easier to share</h1>
-    <p class="lead">Ten small, open-source tools. Each is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all ten are tested together, installed from GitHub, on Windows, macOS and Linux.</p>
+    <p class="lead">Eleven small, open-source tools. Each is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all eleven are tested together, installed from GitHub, on Windows, macOS and Linux.</p>
     <div class="cta">
       <div class="cmd"><code><span class="prompt">$ </span>npx -y github:nrzz/claude-code-toolkit</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-code-toolkit">Copy</button></div>
       <a class="btn secondary" href="https://github.com/nrzz/claude-code-toolkit">View on GitHub</a>
     </div>
     <p class="cta-note">Opens a setup page with the recommended tools already switched on: one click on Install sets them up, and each tool's settings are there when you want them. Prefer Claude Code's plugins? <code>/plugin marketplace add nrzz/claude-code-toolkit</code>. Spendcap is in Anthropic's plugin directory: <code>/plugin install spendcap@anthropic-plugin-directory</code></p>
     <ul class="stats">
-      <li><b>10</b><span>tools, MIT licensed</span></li>
+      <li><b>11</b><span>tools, MIT licensed</span></li>
       <li><b>0</b><span>dependencies</span></li>
-      <li><b>3,500+</b><span>automated tests</span></li>
+      <li><b>3,700+</b><span>automated tests</span></li>
       <li><b>3 OS</b><span>in every tool's CI</span></li>
     </ul>
     <figure class="shot">
@@ -259,6 +260,12 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
           <div class="tags"><span class="tag tokens">0: runs outside Claude</span><span class="tag">CLI + plugin</span></div>
           <div class="cmd"><code>npx -y github:nrzz/claude-chat-ferry import cursor:latest</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-chat-ferry import cursor:latest">Copy</button></div>
         </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-session-tidy">Session tidy</a></h3>
+          <p>Delete, keep and restore your sessions before the 30-day cleanup removes them: a list with the day each one goes, a trash you can restore from, and a keep list that outlives the cleanup. Finds empty and orphaned sessions too.</p>
+          <div class="tags"><span class="tag tokens">0; the optional skill: about 1,400 per use</span><span class="tag">CLI + plugin</span></div>
+          <div class="cmd"><code>npx -y github:nrzz/claude-session-tidy list</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-session-tidy list">Copy</button></div>
+        </article>
       </div>
     </div>
   </section>
@@ -283,9 +290,9 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <div class="panel">
         <ol class="steps">
           <li>A throwaway home and Claude Code config that already hold settings of their own.</li>
-          <li>Every tool installed from GitHub, and every hook run exactly as <code>settings.json</code> lists it, with the JSON Claude Code sends: guardrails denies <code>rm -rf /</code>, notify pings after a long turn, cost guard holds a prompt over a hard budget, two teammates share a session through one git remote, a replay escapes hostile text.</li>
+          <li>Every tool installed from GitHub, and every hook run exactly as <code>settings.json</code> lists it, with the JSON Claude Code sends: guardrails denies <code>rm -rf /</code>, notify pings after a long turn, cost guard holds a prompt over a hard budget, two teammates share a session through one git remote, a replay escapes hostile text, session tidy keeps one old session and moves another to its trash and back byte for byte.</li>
           <li>The one-command setup run as a user would, in a second home folder: install with options, the setup page started for real and driven through its own API, Done, and everything uninstalled again.</li>
-          <li>All eight plugins installed from this marketplace with <code>claude plugin install</code>, their own hooks run from the installed copies, their token estimate checked, and the HUD's engine tests run inside Claude Code.</li>
+          <li>All nine plugins installed from this marketplace with <code>claude plugin install</code>, their own hooks run from the installed copies, their token estimate checked, and the HUD's engine tests run inside Claude Code.</li>
           <li>Everything uninstalled, and <code>settings.json</code> checked to be exactly what the user had.</li>
         </ol>
       </div>
@@ -298,6 +305,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <p class="sub">The releases of 4 October come from an audit that checked every README against the code. Each tool's changelog lists every fix.</p>
       <div class="panel">
         <ul class="releases">
+          <li><a href="https://github.com/nrzz/claude-code-toolkit/releases/tag/v1.3.0">toolkit <span class="v">v1.3.0</span></a><p>Eleven tools: the setup page, the marketplace and the end-to-end test now include session tidy.</p></li>
+          <li><a href="https://github.com/nrzz/claude-session-tidy/releases/tag/v1.0.0">session-tidy <span class="v">v1.0.0</span></a><p>New: list your sessions with the day Claude Code's 30-day cleanup removes each, delete with a restore, and keep the ones you want past the cleanup.</p></li>
           <li><a href="https://github.com/nrzz/claude-code-toolkit/releases/tag/v1.2.1">toolkit <span class="v">v1.2.1</span></a><p>The setup page's server keeps its connections open while an installer runs, so a slow machine no longer sees a reset request; a Star link and a sitemap for the site.</p></li>
           <li><a href="https://github.com/nrzz/claude-code-team-sync/releases/tag/v1.2.1">team-sync <span class="v">v1.2.1</span></a><p>Privacy fixes: the session title and any tool input field named like a secret are now redacted before a session is shared, and an invalid settings file is left as it is.</p></li>
           <li><a href="https://github.com/nrzz/claude-chat-ferry/releases/tag/v1.0.0">chat-ferry <span class="v">v1.0.0</span></a><p>New: continue a Cursor or Antigravity chat in Claude Code, hand a Claude Code session to them, or turn any chat into Markdown or JSON.</p></li>

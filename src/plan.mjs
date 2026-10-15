@@ -3,7 +3,7 @@
 import { byId, OptionError } from "./catalog.mjs";
 
 // Settings tools first, then the project tools; one at a time, since each writes settings.json.
-export const ORDER = ["guardrails", "notify", "glow", "cost-guard", "handover", "team-sync", "starter-kits"];
+export const ORDER = ["guardrails", "notify", "glow", "cost-guard", "session-tidy", "handover", "team-sync", "starter-kits"];
 
 const hideUrls = (a) => (/^https?:\/\//.test(a) ? "<URL>" : a);
 const label = (tool, kind, args, first) =>

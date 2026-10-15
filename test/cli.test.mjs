@@ -25,7 +25,8 @@ test("arguments: tools by name, groups and aliases; flags as each tool's options
   assert.throws(() => parseArgs(["install", "--theme"]), /needs a value/);
   assert.deepEqual(pickTools(["recommended"]), ["guardrails", "notify", "glow"]);
   assert.deepEqual(pickTools(["starter", "cost", "guardrails"]), ["guardrails", "cost-guard", "starter-kits"]);
-  assert.equal(pickTools(["all"]).length, 7);
+  assert.equal(pickTools(["all"]).length, 8);
+  assert.deepEqual(pickTools(["session-tidy", "guardrails"]), ["guardrails", "session-tidy"], "in the fixed order");
   assert.throws(() => pickTools(["md-doctor"]), /no tool "md-doctor"/);
   assert.deepEqual(optionsFromFlags("glow", { theme: "nord", "no-ui-theme": true }), { theme: "nord", uiTheme: false });
   assert.deepEqual(optionsFromFlags("notify", { ntfy: "auto", "min-turn-seconds": "45" }), { ntfy: "auto", minTurnSeconds: 45 });
@@ -46,6 +47,18 @@ test("install runs the tools' own commands with the options given, then says wha
   ]);
   assert.match(r.out, /- Install Guardrails \.\.\. done/);
   assert.match(r.out, /Start a new Claude Code session/);
+});
+
+test("install session-tidy runs its init and nothing else, and recommended leaves it out", async () => {
+  const { env, project } = sandbox();
+  const tools = fakeTools();
+  const r = await run(["install", "session-tidy", "--source", tools.dir, "--project", project], env, project);
+  assert.equal(r.code, 0, r.err);
+  assert.deepEqual(tools.calls().map((c) => [c.repo, ...c.args]), [["claude-session-tidy", "init"]]);
+  assert.match(r.out, /- Install Session tidy [.][.][.] done/);
+  tools.reset();
+  await run(["install", "recommended", "--source", tools.dir, "--project", project], env, project);
+  assert.equal(tools.calls().some((c) => c.repo === "claude-session-tidy"), false);
 });
 
 test("install refuses bad options before anything runs, and leaves glow out over another status line", async () => {
@@ -70,9 +83,10 @@ test("uninstall all removes what is installed; status describes it", async () =>
   const status = await run(["status", "--project", project], env, project);
   assert.match(status.out, /Guardrails\s+installed \(preset relaxed\)/);
   assert.match(status.out, /Cost guard\s+installed \(no budget set\)/);
+  assert.match(status.out, /Session tidy\s+installed\n/);
   const r = await run(["uninstall", "all", "--source", tools.dir], env, project);
   assert.equal(r.code, 0, r.err);
-  assert.deepEqual(tools.calls().map((c) => c.args.join(" ")), ["uninstall --scope user", "uninstall", "uninstall", "uninstall"]);
+  assert.deepEqual(tools.calls().map((c) => c.args.join(" ")), ["uninstall --scope user", "uninstall", "uninstall", "uninstall", "uninstall"]);
 });
 
 test("a settings.json that is not JSON stops install before anything runs", async () => {
