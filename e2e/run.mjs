@@ -319,6 +319,52 @@ if (want("permission-doctor")) {
     fs.readFileSync(settingsFile).equals(before) && fs.readdirSync(pd.cfg).sort().join() === "projects,settings.json", fs.readdirSync(pd.cfg).join());
 }
 
+// ---- hook-bench: every hook of a settings file, run with the JSON Claude Code sends --------------------------
+// Its own config folder and project. The settings hold a PreToolUse hook that denies rm -rf, a Stop hook whose
+// JSON has a field of the wrong type, a hook under a misspelled event name, and a SessionStart hook that prints
+// context. The bench runs them for real (they are node one-liners) and must call each what Claude Code would.
+const hb = { cfg: path.join(base, "hb", ".claude"), project: path.join(base, "hb", "app") };
+fs.mkdirSync(hb.cfg, { recursive: true });
+fs.mkdirSync(hb.project, { recursive: true });
+if (want("hook-bench")) {
+  const nodeHook = (code) => ({ type: "command", command: process.execPath, args: ["-e", code] });
+  fs.writeFileSync(path.join(hb.cfg, "settings.json"), JSON.stringify({
+    hooks: {
+      PreToolUse: [{ matcher: "Bash", hooks: [nodeHook("const i=JSON.parse(require('fs').readFileSync(0,'utf8')); if(/rm -rf/.test(i.tool_input.command)) process.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'PreToolUse',permissionDecision:'deny',permissionDecisionReason:'no rm -rf'}}))")] }],
+      Stop: [{ hooks: [nodeHook("process.stdout.write(JSON.stringify({systemMessage: 5}))")] }],
+      PreToolUs: [{ hooks: [nodeHook("0")] }],
+      SessionStart: [{ matcher: "startup", hooks: [nodeHook("process.stdout.write('Current branch: main')")] }],
+    },
+  }, null, 2) + "\n");
+  const snapshot = () => fs.readdirSync(hb.cfg, { recursive: true }).map((f) => `${f}:${fs.statSync(path.join(hb.cfg, String(f))).size}`).sort().join(",");
+  const before = snapshot();
+  const bench = (argv) => tool("claude-hook-bench", "bin/claude-hook-bench.mjs", [...argv, "--project", hb.project], { cwd: hb.project, env: { CLAUDE_CONFIG_DIR: hb.cfg } });
+  const list = bench(["list", "--json"]);
+  const lm = parse(list.out);
+  check("hook-bench", "list --json finds the four hooks and flags the misspelled event, with a suggestion",
+    list.code === 0 && lm?.hooks?.length === 4 && lm.hooks.find((h) => h.event === "PreToolUs")?.findings.some((f) => f.severity === "error" && /did you mean PreToolUse/.test(f.message)) && lm.summary.errors === 1, list.out.slice(0, 600) + list.err);
+  const quiet = bench(["run", "--json", "--event", "PreToolUse:Bash"]);
+  const deny = bench(["run", "--json", "--event", "PreToolUse:Bash", "--command", "rm -rf /tmp/build"]);
+  const qm = parse(quiet.out);
+  const dm = parse(deny.out);
+  check("hook-bench", "run: the deny hook is silent on npm test and denies rm -rf, with its reason",
+    quiet.code === 0 && qm?.runs?.length === 1 && qm.runs[0].verdict.outcome === "silent" && deny.code === 0 && dm?.runs?.length === 1 && dm.runs[0].verdict.outcome === "block" && /no rm -rf/.test(dm.runs[0].verdict.effects.join(" ")),
+    quiet.out.slice(0, 400) + quiet.err + deny.out.slice(0, 400) + deny.err);
+  const all = bench(["run", "--json"]);
+  const am = parse(all.out);
+  const stop = am?.runs?.find((r) => r.event === "Stop");
+  const start = am?.runs?.find((r) => r.event === "SessionStart");
+  const typo = am?.runs?.find((r) => r.event === "PreToolUs");
+  check("hook-bench", "run: the wrong-typed systemMessage is a non-blocking error with the field named, the context hook adds context, the misspelled hook is skipped",
+    all.code === 0 && stop?.verdict.outcome === "error" && /systemMessage: expected string, received number/.test(stop.verdict.problems.join(" ")) && start?.verdict.outcome === "context" && typo?.skipped && am.summary.runs === 3,
+    all.out.slice(0, 800) + all.err);
+  const failOn = bench(["run", "--fail-on", "error"]);
+  check("hook-bench", "run --fail-on error exits 1 because of the invalid output and the misspelled event", failOn.code === 1, `exit ${failOn.code}: ${failOn.out.slice(-300)}${failOn.err}`);
+  const explain = bench(["explain", "1"]);
+  check("hook-bench", "explain 1 prints the JSON the hook gets and how its answer is read", explain.code === 0 && /"hook_event_name": "PreToolUse"/.test(explain.out) && /exit 2: blocks/.test(explain.out), explain.out.slice(0, 400) + explain.err);
+  check("hook-bench", "none of the runs changed a file under the config folder", snapshot() === before, snapshot());
+}
+
 // ---- starter-kits, then md-doctor on what they wrote -----------------------------------------------
 if (want("starter") || want("md-doctor")) {
   const k = tool("claude-code-starter-kits", "bin/claude-starter.mjs", [], { cwd: project });
@@ -508,6 +554,14 @@ if (want("marketplace")) {
     check("marketplace", "the permission-doctor plugin's skill runs its lint and suggest reports from the installed copy",
       pdReports.length === 2 && pdReports.every((r) => r.code === 0 && r.err === "") && /^## permission-doctor lint/m.test(pdReports[0].out) && /^## permission-doctor suggest/m.test(pdReports[1].out)
         && (!want("permission-doctor") || (pdReports[0].out.includes("make deploy-staging") && pdReports[1].out.includes("docker compose up"))), pdReports.map((r) => r.out + r.err).join("\n---\n"));
+    // hook-bench has no hook either: its skill's one `!` line runs the bench for the project. Run it as written from the
+    // installed copy against the hook-bench config made above (the one with the deny hook, the invalid output and the misspelling).
+    const hbPlugin = list.find((p) => p.id === "hook-bench@claude-code-toolkit");
+    const hbSkill = hbPlugin ? fs.readFileSync(path.join(hbPlugin.installPath, "skills", "check", "SKILL.md"), "utf8").replace(/\r\n/g, "\n") : "";
+    const hbLines = hbSkill.split("\n").map((l) => /^!\x60(.*)\x60$/.exec(l)?.[1]).filter(Boolean);
+    const hbReports = hbLines.map((line) => run(line.replaceAll("${CLAUDE_PLUGIN_ROOT}", hbPlugin.installPath).replaceAll("${CLAUDE_PROJECT_DIR}", hb.project), [], { cwd: hb.project, env: { ...pEnv, CLAUDE_CONFIG_DIR: hb.cfg }, shell: true }));
+    check("marketplace", "the hook-bench plugin's skill runs the bench's markdown report from the installed copy",
+      hbReports.length === 1 && hbReports[0].code === 0 && /^## hook-bench: /m.test(hbReports[0].out) && (!want("hook-bench") || (/\| PreToolUs \| skipped \|/.test(hbReports[0].out) && /systemMessage: expected string/.test(hbReports[0].out))), hbReports.map((r) => r.out + r.err).join("\n---\n"));
     let total = 0;
     for (const name of names) {
       const d = claude(["plugin", "details", `${name}@claude-code-toolkit`]);
@@ -578,7 +632,7 @@ if (want("setup")) {
     for (let i = 0; i < 120 && !state?.ready; i++) { state = await (await api("/api/state")).json(); if (!state.ready) await new Promise((r) => setTimeout(r, 500)); }
     // The four installed above; project tools depend on what earlier sections left in the project.
     const userInstalled = (state?.tools || []).filter((t) => t.scope === "user" && t.installed).map((t) => t.id);
-    check("setup", "it fetched all twelve tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
+    check("setup", "it fetched all thirteen tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
       JSON.stringify({ failed: state?.failed, userInstalled, glowThemes: state?.glowThemes?.length }));
     const applied = await (await api("/api/apply", { choices: { glow: { enabled: true, options: { theme: "nord", icons: "unicode", uiTheme: true } }, notify: { enabled: false } } })).text();
     const last = parse(applied.trim().split("\n").pop());
@@ -619,6 +673,6 @@ if (!results.length) failed.push({ area: "e2e", what: `no checks ran${only.lengt
 const passed = results.filter((r) => r.ok).length;
 console.log(results.length
   ? `\n${passed} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map((f) => `${f.area}: ${f.what}`).join("; ")}` : ""}.`
-  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, permission-doctor, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
+  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, permission-doctor, hook-bench, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
 if (!args.includes("--keep")) fs.rmSync(base, { recursive: true, force: true });
 process.exitCode = failed.length ? 1 : 0;

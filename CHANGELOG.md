@@ -4,6 +4,12 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-16
+
+- A thirteenth tool: [claude-hook-bench](https://github.com/nrzz/claude-hook-bench) runs every hook of a Claude Code setup with the exact JSON Claude Code sends for its event and reports what each one does: exit code, time, output, whether the output is valid for the event, and whether Claude Code would block, allow, ask, add context or stay silent; before running anything it finds the mistakes Claude Code swallows in silence (a misspelled event, a lowercase matcher, a missing script, a wrong-typed field). Like md-doctor, session replay, chat ferry and permission doctor it only runs on demand, so there is nothing to install or switch on: the setup page lists it with two buttons (list the hooks and check them, run every hook), and `status` says it runs on demand. The marketplace carries its `hook-bench` plugin. The end-to-end test gives it a config of its own with four hooks (a deny on `rm -rf`, an invalid `systemMessage`, a misspelled event name and a SessionStart hook that prints context): `list --json` flags the misspelling, `run --json` calls the deny a deny for `rm -rf` and silent for `npm test`, the invalid output a non-blocking error with the field named, and the context hook `adds context`, and no file under the config folder changes. With a Claude Code CLI at hand it also installs the plugin and runs its skill's command from the installed copy.
+- Always-on tokens: all eleven plugins together add about 180 by Claude Code's own estimate (hook bench's skill description adds 15), still under the 200 the end-to-end test allows, and the request Claude Code sends the model still mentions none of the user-only skills (now twelve).
+- Website and README: thirteen tools, eleven plugins, the new tool's card and rows, over 5,800 tests, and the preview images say thirteen.
+
 ## [1.4.0] - 2026-10-15
 
 - A twelfth tool: [claude-permission-doctor](https://github.com/nrzz/claude-permission-doctor) tells you why Claude Code asked for a permission, finds the rules that do nothing (dead, repeated, hidden behind a deny or ask rule, or skipped by Claude Code) and proposes rules from the commands that ran without one. Like md-doctor, session replay and chat ferry it only runs on demand, so there is nothing to install or switch on: the setup page lists it with three buttons (show this project's rules, check them, suggest rules from history), none of which changes a file, and `status` says it runs on demand. The marketplace carries its `permission-doctor` plugin. The end-to-end test gives it a config of its own with a prefix rule, a `:*` rule, a literal rule and a deny, and a synthetic transcript in which one command ran four times without a rule: `show --json` lists the four rules with their file, `why "git status && npm test" --json` allows the first part by the `:*` rule and finds no rule for the second, `why "rm -rf build" --json` is denied by the deny rule, `lint --json` calls the literal rule nobody used dead (and no prefix rule), `suggest --json` proposes `Bash(docker compose up *)`, and none of the five runs changes a file. With a Claude Code CLI at hand it also installs the plugin and runs its skill's two commands from the installed copy.
@@ -48,6 +54,7 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 - First release: one plugin marketplace for glow, glow-hud, guardrails, notify, cost-guard, md-doctor and replay; the website; an end-to-end test that installs all nine tools from GitHub, runs their hooks, installs the plugins with Claude Code's own commands and checks that uninstalling restores the user's settings.
 
+[1.5.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/nrzz/claude-code-toolkit/compare/v1.2.0...v1.2.1

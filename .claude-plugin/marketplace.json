@@ -136,6 +136,19 @@
         "url": "https://github.com/nrzz/claude-permission-doctor.git"
       },
       "homepage": "https://github.com/nrzz/claude-permission-doctor"
+    },
+    {
+      "name": "hook-bench",
+      "description": "Run every hook of this setup with the exact JSON Claude Code sends for its event and see what each one does: exit code, time, output, whether the output is valid for the event, and whether it blocks, allows or stays silent (/hook-bench:check runs them for this project and reports in at most 10 lines). The claude-hook-bench command does the same from a terminal, at no token cost. The skill is user-only and costs about 500 to 900 tokens when you run it.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-hook-bench.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-hook-bench"
     }
   ]
 }

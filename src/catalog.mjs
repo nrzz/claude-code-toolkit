@@ -1,4 +1,4 @@
-// The twelve tools: where each lives, what it asks, and the exact command lines that install,
+// The thirteen tools: where each lives, what it asks, and the exact command lines that install,
 // change and remove it. Every command line is an argument array for the tool's own CLI, never a
 // shell string, so nothing a person types can become a command.
 
@@ -222,6 +222,17 @@ export const TOOLS = [
       show: { label: "Show this project's rules", args: (o, ctx) => ["show", "--project", ctx.project] },
       lint: { label: "Check the rules", args: (o, ctx) => ["lint", "--project", ctx.project] },
       suggest: { label: "Suggest rules from history", args: (o, ctx) => ["suggest", "--project", ctx.project] },
+    },
+  },
+  {
+    id: "hook-bench", repo: "claude-hook-bench", bin: "bin/claude-hook-bench.mjs", scope: "action",
+    name: "Hook bench", tokens: "0: runs outside Claude",
+    summary: "Runs every hook of this setup with the exact JSON Claude Code sends for its event and reports what each one does: exit code, time, output, whether the output is valid for the event, and whether it blocks, allows or stays silent. Finds the mistakes Claude Code swallows in silence before running anything.",
+    defaults: {},
+    validate: () => ({}),
+    actions: {
+      list: { label: "List the hooks and check them", args: (o, ctx) => ["list", "--project", ctx.project] },
+      run: { label: "Run every hook", args: (o, ctx) => ["run", "--project", ctx.project] },
     },
   },
 ];

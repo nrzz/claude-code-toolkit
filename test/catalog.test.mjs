@@ -7,7 +7,7 @@ const v = (id, o, ctx) => byId(id).validate(o, ctx);
 const bad = (id, o, re, ctx) => assert.throws(() => v(id, o, ctx), (e) => e instanceof OptionError && re.test(e.message));
 
 test("every tool has a repository, a command file, a summary, a token note and valid defaults", () => {
-  assert.equal(TOOLS.length, 12);
+  assert.equal(TOOLS.length, 13);
   for (const t of TOOLS) {
     assert.match(t.repo, /^claude-[a-z-]+$/, t.id);
     assert.match(t.bin, /\.mjs$/, t.id);
@@ -48,6 +48,16 @@ test("permission doctor: an on-demand tool like md-doctor, with nothing to insta
   const ctx = { project: "/work/app" };
   assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["show", "--project", "/work/app"], ["lint", "--project", "/work/app"], ["suggest", "--project", "/work/app"]]);
   for (const a of Object.values(t.actions)) assert.equal(a.args({}, ctx).some((x) => /^--(fix|write|dry-run)$/.test(x)), false, "the page never edits a settings file");
+});
+
+test("hook bench: an on-demand tool like permission doctor, with nothing to install and two commands run in the project", () => {
+  const t = byId("hook-bench");
+  assert.deepEqual([t.scope, t.plugin, !!t.recommended, t.install, t.change, t.uninstall], ["action", undefined, false, undefined, undefined, undefined]);
+  assert.deepEqual(v("hook-bench", { preset: "ignored" }), {}, "it has no options");
+  assert.deepEqual(Object.keys(t.actions), ["list", "run"]);
+  const ctx = { project: "/work/app" };
+  assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["list", "--project", "/work/app"], ["run", "--project", "/work/app"]]);
+  for (const a of Object.values(t.actions)) assert.equal(a.args({}, ctx).some((x) => /^--(input|plugin-dir|keep)$/.test(x)), false, "the page runs the setup's own hooks with the default fixtures");
 });
 
 test("notify: a set line only for what differs, secrets kept unless replaced, an existing ntfy topic kept", () => {
