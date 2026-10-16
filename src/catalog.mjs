@@ -1,4 +1,4 @@
-// The fifteen tools: where each lives, what it asks, and the exact command lines that install,
+// The seventeen tools: where each lives, what it asks, and the exact command lines that install,
 // change and remove it. Every command line is an argument array for the tool's own CLI, never a
 // shell string, so nothing a person types can become a command.
 
@@ -256,6 +256,29 @@ export const TOOLS = [
     actions: {
       show: { label: "Show the merged settings", args: (o, ctx) => ["show", "--project", ctx.project] },
       lint: { label: "Check the settings files", args: (o, ctx) => ["lint", "--project", ctx.project] },
+    },
+  },
+  {
+    id: "automode-doctor", repo: "claude-automode-doctor", bin: "bin/claude-automode-doctor.mjs", scope: "action",
+    name: "Auto mode doctor", tokens: "0: runs outside Claude",
+    summary: "What Claude Code's auto mode and its classifier decided, read from your transcripts: who made each tool decision (static approval, a rule, the classifier, a hook, you), the commands the classifier refused, and the refusals that were no verdict at all (the service, not your settings). Its lint finds an autoMode list that replaces the built-in rules because \"$defaults\" is missing, and why says whether a command goes to the classifier.",
+    defaults: {},
+    validate: () => ({}),
+    actions: {
+      report: { label: "What auto mode decided, in all projects", args: () => ["report"] },
+      show: { label: "Show the autoMode and permission settings", args: (o, ctx) => ["show", "--project", ctx.project] },
+      lint: { label: "Check the autoMode settings", args: (o, ctx) => ["lint", "--project", ctx.project] },
+    },
+  },
+  {
+    id: "mcp-check", repo: "claude-mcp-check", bin: "bin/claude-mcp-check.mjs", scope: "action",
+    name: "MCP check", tokens: "0: runs outside Claude",
+    summary: "Every MCP server Claude Code would load for the project, from which file, which definition wins, and whether a .mcp.json server is approved, pending or off, with the mistakes that keep one from starting: a command that is not on PATH, a ${VAR} set nowhere, a name in two scopes. Its check command starts each server the way Claude Code would and sizes its tools; toggle turns a .mcp.json server on or off.",
+    defaults: {},
+    validate: () => ({}),
+    actions: {
+      show: { label: "Show the MCP servers and where each comes from", args: (o, ctx) => ["show", "--project", ctx.project] },
+      lint: { label: "Check the MCP configuration", args: (o, ctx) => ["lint", "--project", ctx.project] },
     },
   },
 ];

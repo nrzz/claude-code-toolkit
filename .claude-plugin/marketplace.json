@@ -162,6 +162,32 @@
         "url": "https://github.com/nrzz/claude-settings-doctor.git"
       },
       "homepage": "https://github.com/nrzz/claude-settings-doctor"
+    },
+    {
+      "name": "automode-doctor",
+      "description": "What Claude Code's auto mode and its classifier decided, read from your transcripts: who made each tool decision, the commands the classifier refused, and the refusals that were no verdict at all (the service, not your settings), plus a lint of the autoMode settings, such as a list that drops the built-in rules because \"$defaults\" is missing (/automode-doctor:check hands Claude a report of at most 17 lines and asks for a reply of at most 10). The claude-automode-doctor command does the same from a terminal, at no token cost. The skill is user-only and costs about 280 tokens when you run it.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "security",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-automode-doctor.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-automode-doctor"
+    },
+    {
+      "name": "mcp-check",
+      "description": "Every MCP server Claude Code would load for the project, from which file and which definition wins, whether it starts, and what its tools cost in context, plus a lint that finds a command not on PATH, a ${VAR} set nowhere, a .mcp.json server pending approval and a name defined twice (/mcp-check:check runs the lint for this project and answers in at most 10 lines). The claude-mcp-check command does the same from a terminal, at no token cost. The skill is user-only and costs about 490 tokens when you run it.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-mcp-check.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-mcp-check"
     }
   ]
 }

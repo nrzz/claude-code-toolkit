@@ -4,21 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude Code toolkit: open-source plugins that save tokens</title>
-<meta name="description" content="Fifteen small, open-source tools for Claude Code: themes and a HUD, safety guardrails, notifications, token budgets, a CLAUDE.md doctor, session replays, session cleanup with restore, permission prompts explained and dead rules found, a bench that runs every hook with the JSON Claude Code sends, a settings doctor with a commented settings.jsonc, a move of the config folder to another drive, chat moves to Cursor and Antigravity, team session sharing, starter kits and handovers. No dependencies, few or no tokens.">
+<meta name="description" content="Seventeen small, open-source tools for Claude Code: themes and a HUD, safety guardrails, notifications, token budgets, a CLAUDE.md doctor, session replays, session cleanup with restore, permission prompts explained and dead rules found, a bench that runs every hook with the JSON Claude Code sends, a settings doctor with a commented settings.jsonc, a move of the config folder to another drive, what auto mode and its classifier decided, every MCP server and what it costs, chat moves to Cursor and Antigravity, team session sharing, starter kits and handovers. No dependencies, few or no tokens.">
 <link rel="canonical" href="https://nrzz.github.io/claude-code-toolkit/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Claude Code toolkit">
-<meta property="og:description" content="Fifteen small, open-source tools that make Claude Code cheaper, safer and easier to share. No dependencies, few or no tokens, tested together on Windows, macOS and Linux.">
+<meta property="og:description" content="Seventeen small, open-source tools that make Claude Code cheaper, safer and easier to share. No dependencies, few or no tokens, tested together on Windows, macOS and Linux.">
 <meta property="og:url" content="https://nrzz.github.io/claude-code-toolkit/">
 <meta property="og:site_name" content="Claude Code toolkit">
 <meta property="og:image" content="https://nrzz.github.io/claude-code-toolkit/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Claude Code toolkit: fifteen small tools that make Claude Code cheaper, safer and easier to share. npx -y github:nrzz/claude-code-toolkit">
+<meta property="og:image:alt" content="Claude Code toolkit: seventeen small tools that make Claude Code cheaper, safer and easier to share. npx -y github:nrzz/claude-code-toolkit">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://nrzz.github.io/claude-code-toolkit/og.png">
 <meta name="twitter:title" content="Claude Code toolkit">
-<meta name="twitter:description" content="Fifteen small, open-source tools that make Claude Code cheaper, safer and easier to share.">
+<meta name="twitter:description" content="Seventeen small, open-source tools that make Claude Code cheaper, safer and easier to share.">
 <meta name="author" content="Naresh Prabu (nrzz)">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d97757'/%3E%3Cpath d='M9 11l6 5-6 5M17 22h7' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -43,7 +43,9 @@
     {"@type": "ListItem", "position": 12, "item": {"@type": "SoftwareSourceCode", "name": "claude-permission-doctor", "codeRepository": "https://github.com/nrzz/claude-permission-doctor", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
     {"@type": "ListItem", "position": 13, "item": {"@type": "SoftwareSourceCode", "name": "claude-hook-bench", "codeRepository": "https://github.com/nrzz/claude-hook-bench", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
     {"@type": "ListItem", "position": 14, "item": {"@type": "SoftwareSourceCode", "name": "claude-relocate", "codeRepository": "https://github.com/nrzz/claude-relocate", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
-    {"@type": "ListItem", "position": 15, "item": {"@type": "SoftwareSourceCode", "name": "claude-settings-doctor", "codeRepository": "https://github.com/nrzz/claude-settings-doctor", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}}
+    {"@type": "ListItem", "position": 15, "item": {"@type": "SoftwareSourceCode", "name": "claude-settings-doctor", "codeRepository": "https://github.com/nrzz/claude-settings-doctor", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 16, "item": {"@type": "SoftwareSourceCode", "name": "claude-automode-doctor", "codeRepository": "https://github.com/nrzz/claude-automode-doctor", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}},
+    {"@type": "ListItem", "position": 17, "item": {"@type": "SoftwareSourceCode", "name": "claude-mcp-check", "codeRepository": "https://github.com/nrzz/claude-mcp-check", "programmingLanguage": "JavaScript", "license": "https://opensource.org/licenses/MIT"}}
   ]
 }
 </script>
@@ -182,16 +184,16 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <main>
   <div class="wrap hero">
     <h1>Claude Code, cheaper, safer and easier to share</h1>
-    <p class="lead">Fifteen small, open-source tools. Each is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all fifteen are tested together, installed from GitHub, on Windows, macOS and Linux.</p>
+    <p class="lead">Seventeen small, open-source tools. Each is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all seventeen are tested together, installed from GitHub, on Windows, macOS and Linux.</p>
     <div class="cta">
       <div class="cmd"><code><span class="prompt">$ </span>npx -y github:nrzz/claude-code-toolkit</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-code-toolkit">Copy</button></div>
       <a class="btn secondary" href="https://github.com/nrzz/claude-code-toolkit">View on GitHub</a>
     </div>
     <p class="cta-note">Opens a setup page with the recommended tools already switched on: one click on Install sets them up, and each tool's settings are there when you want them. Prefer Claude Code's plugins? <code>/plugin marketplace add nrzz/claude-code-toolkit</code>. Spendcap is in Anthropic's plugin directory: <code>/plugin install spendcap@anthropic-plugin-directory</code></p>
     <ul class="stats">
-      <li><b>15</b><span>tools, MIT licensed</span></li>
+      <li><b>17</b><span>tools, MIT licensed</span></li>
       <li><b>0</b><span>dependencies</span></li>
-      <li><b>6,500+</b><span>automated tests</span></li>
+      <li><b>6,900+</b><span>automated tests</span></li>
       <li><b>3 OS</b><span>in every tool's CI</span></li>
     </ul>
     <figure class="shot">
@@ -294,6 +296,18 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
           <div class="tags"><span class="tag tokens">0; the optional skill: about 340 per use</span><span class="tag">CLI + plugin</span></div>
           <div class="cmd"><code>npx -y github:nrzz/claude-settings-doctor lint</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-settings-doctor lint">Copy</button></div>
         </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-automode-doctor">Auto mode doctor</a></h3>
+          <p>What auto mode and its classifier decided, read from your transcripts: who made each tool decision, the commands the classifier refused, and the refusals that were no verdict at all, the service rather than your settings. Its lint finds an <code>autoMode</code> list that drops the built-in rules because <code>"$defaults"</code> is missing, and <code>why</code> says whether a command goes to the classifier.</p>
+          <div class="tags"><span class="tag tokens">0; the optional skill: about 280 per use</span><span class="tag">CLI + plugin</span></div>
+          <div class="cmd"><code>npx -y github:nrzz/claude-automode-doctor report</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-automode-doctor report">Copy</button></div>
+        </article>
+        <article class="card">
+          <h3><a href="https://github.com/nrzz/claude-mcp-check">MCP check</a></h3>
+          <p>Every MCP server Claude Code would load for the project, from which file and which definition wins, and whether a <code>.mcp.json</code> server is approved, pending or off. <code>check</code> starts each server the way Claude Code would, lists its tools and sizes them; the lint finds a command not on PATH, a <code>${VAR}</code> set nowhere and a name in two scopes.</p>
+          <div class="tags"><span class="tag tokens">0; the optional skill: about 490 per use</span><span class="tag">CLI + plugin</span></div>
+          <div class="cmd"><code>npx -y github:nrzz/claude-mcp-check show</code><button class="copy" type="button" data-copy="npx -y github:nrzz/claude-mcp-check show">Copy</button></div>
+        </article>
       </div>
     </div>
   </section>
@@ -318,9 +332,9 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <div class="panel">
         <ol class="steps">
           <li>A throwaway home and Claude Code config that already hold settings of their own.</li>
-          <li>Every tool installed from GitHub, and every hook run exactly as <code>settings.json</code> lists it, with the JSON Claude Code sends: guardrails denies <code>rm -rf /</code>, notify pings after a long turn, cost guard holds a prompt over a hard budget, two teammates share a session through one git remote, a replay escapes hostile text, session tidy keeps one old session and moves another to its trash and back byte for byte, permission doctor explains a prompt and finds a dead rule without changing a file, relocate moves a config folder and puts it back byte for byte, settings doctor finds the trailing comma that makes Claude Code ignore a whole file and builds <code>settings.json</code> from a commented <code>settings.jsonc</code>.</li>
+          <li>Every tool installed from GitHub, and every hook run exactly as <code>settings.json</code> lists it, with the JSON Claude Code sends: guardrails denies <code>rm -rf /</code>, notify pings after a long turn, cost guard holds a prompt over a hard budget, two teammates share a session through one git remote, a replay escapes hostile text, session tidy keeps one old session and moves another to its trash and back byte for byte, permission doctor explains a prompt and finds a dead rule without changing a file, relocate moves a config folder and puts it back byte for byte, settings doctor finds the trailing comma that makes Claude Code ignore a whole file and builds <code>settings.json</code> from a commented <code>settings.jsonc</code>, auto mode doctor tells a classifier refusal from a refusal with no verdict, MCP check starts a server the way Claude Code would and sizes its tools.</li>
           <li>The one-command setup run as a user would, in a second home folder: install with options, the setup page started for real and driven through its own API, Done, and everything uninstalled again.</li>
-          <li>All twelve plugins installed from this marketplace with <code>claude plugin install</code>, their own hooks run from the installed copies, their token estimate checked, the request Claude Code sends the model checked for their user-only skills, and the HUD's engine tests run inside Claude Code.</li>
+          <li>All fourteen plugins installed from this marketplace with <code>claude plugin install</code>, their own hooks run from the installed copies, their token estimate checked, the request Claude Code sends the model checked for their user-only skills, and the HUD's engine tests run inside Claude Code.</li>
           <li>Everything uninstalled, and <code>settings.json</code> checked to be exactly what the user had.</li>
         </ol>
       </div>
@@ -333,6 +347,9 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <p class="sub">The releases of 4 October come from an audit that checked every README against the code. Each tool's changelog lists every fix.</p>
       <div class="panel">
         <ul class="releases">
+          <li><a href="https://github.com/nrzz/claude-code-toolkit/releases/tag/v1.7.0">toolkit <span class="v">v1.7.0</span></a><p>Seventeen tools: the setup page, the marketplace and the end-to-end test now include auto mode doctor and MCP check.</p></li>
+          <li><a href="https://github.com/nrzz/claude-mcp-check/releases/tag/v1.0.0">mcp-check <span class="v">v1.0.0</span></a><p>New: every MCP server Claude Code would load, from which file, whether it starts, and what its tools cost.</p></li>
+          <li><a href="https://github.com/nrzz/claude-automode-doctor/releases/tag/v1.1.0">automode-doctor <span class="v">v1.1.0</span></a><p>New: what auto mode and its classifier decided, from your transcripts, and a lint of the autoMode settings. 1.1.0 adds --since with a date, from the first outside pull request.</p></li>
           <li><a href="https://github.com/nrzz/claude-code-toolkit/releases/tag/v1.6.0">toolkit <span class="v">v1.6.0</span></a><p>Fifteen tools: the setup page, the marketplace and the end-to-end test now include relocate and settings doctor.</p></li>
           <li><a href="https://github.com/nrzz/claude-settings-doctor/releases/tag/v1.0.0">settings-doctor <span class="v">v1.0.0</span></a><p>New: a commented settings.jsonc that builds settings.json, the merged settings with the file each key came from, and a lint that finds what Claude Code ignores in silence.</p></li>
           <li><a href="https://github.com/nrzz/claude-relocate/releases/tag/v1.0.0">relocate <span class="v">v1.0.0</span></a><p>New: move Claude Code's config folder to another drive or the XDG folders, with CLAUDE_CONFIG_DIR set for every shell and an undo that puts it back.</p></li>

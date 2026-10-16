@@ -7,7 +7,7 @@ const v = (id, o, ctx) => byId(id).validate(o, ctx);
 const bad = (id, o, re, ctx) => assert.throws(() => v(id, o, ctx), (e) => e instanceof OptionError && re.test(e.message));
 
 test("every tool has a repository, a command file, a summary, a token note and valid defaults", () => {
-  assert.equal(TOOLS.length, 15);
+  assert.equal(TOOLS.length, 17);
   for (const t of TOOLS) {
     assert.match(t.repo, /^claude-[a-z-]+$/, t.id);
     assert.match(t.bin, /\.mjs$/, t.id);
@@ -78,6 +78,26 @@ test("settings doctor: an on-demand tool like permission doctor, with nothing to
   const ctx = { project: "/work/app" };
   assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["show", "--project", "/work/app"], ["lint", "--project", "/work/app"]]);
   for (const a of Object.values(t.actions)) assert.equal(["init", "build", "absorb", "watch", "restore"].includes(a.args({}, ctx)[0]), false, "the page never writes a settings file");
+});
+
+test("auto mode doctor: an on-demand tool with nothing to install and three commands that only read; the report covers every project", () => {
+  const t = byId("automode-doctor");
+  assert.deepEqual([t.scope, t.plugin, !!t.recommended, t.install, t.change, t.uninstall], ["action", undefined, false, undefined, undefined, undefined]);
+  assert.deepEqual(v("automode-doctor", { preset: "ignored" }), {}, "it has no options");
+  assert.deepEqual(Object.keys(t.actions), ["report", "show", "lint"]);
+  const ctx = { project: "/work/app" };
+  assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["report"], ["show", "--project", "/work/app"], ["lint", "--project", "/work/app"]]);
+  for (const a of Object.values(t.actions)) assert.equal(a.args({}, ctx).some((x) => x === "suggest" || x === "restore" || x === "--write"), false, "the page never writes a settings file");
+});
+
+test("MCP check: an on-demand tool with nothing to install and two commands that only read, run in the project", () => {
+  const t = byId("mcp-check");
+  assert.deepEqual([t.scope, t.plugin, !!t.recommended, t.install, t.change, t.uninstall], ["action", undefined, false, undefined, undefined, undefined]);
+  assert.deepEqual(v("mcp-check", { preset: "ignored" }), {}, "it has no options");
+  assert.deepEqual(Object.keys(t.actions), ["show", "lint"]);
+  const ctx = { project: "/work/app" };
+  assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["show", "--project", "/work/app"], ["lint", "--project", "/work/app"]]);
+  for (const a of Object.values(t.actions)) assert.equal(["check", "why", "toggle", "restore"].includes(a.args({}, ctx)[0]), false, "the page never starts a server or writes a settings file");
 });
 
 test("notify: a set line only for what differs, secrets kept unless replaced, an existing ntfy topic kept", () => {

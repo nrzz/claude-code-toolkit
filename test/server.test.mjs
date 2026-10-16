@@ -64,7 +64,7 @@ test("the state lists all thirteen tools, the recommended ones switched on, and 
   const s = await start();
   t.after(() => s.server.close());
   const st = JSON.parse((await s.api("/api/state")).text);
-  assert.equal(st.tools.length, 15);
+  assert.equal(st.tools.length, 17);
   assert.equal(st.ready, true);
   assert.deepEqual(st.glowThemes.map((x) => x.slug), ["classic", "nord"]);
   assert.deepEqual(Object.entries(st.choices).filter(([, c]) => c.enabled).map(([id]) => id), ["guardrails", "notify", "glow"]);
@@ -178,6 +178,30 @@ test("settings doctor is offered like permission doctor: two buttons, no switch,
   assert.equal(st.choices["settings-doctor"], undefined, "an on-demand tool has nothing to switch on");
   for (const id of ["show", "lint"]) assert.equal(JSON.parse((await s.api("/api/action", { tool: "settings-doctor", action: id })).text).ok, true, id);
   assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), ["show", "lint"].map((id) => ["claude-settings-doctor", id, "--project", s.box.project]));
+});
+
+test("auto mode doctor is offered like hook bench: three buttons that only read, no switch, the report for every project", async (t) => {
+  const s = await start();
+  t.after(() => s.server.close());
+  const st = JSON.parse((await s.api("/api/state")).text);
+  const tool = st.tools.find((x) => x.id === "automode-doctor");
+  assert.deepEqual([tool.scope, tool.installed, tool.removable, tool.recommended], ["action", false, false, false]);
+  assert.deepEqual(tool.actions.map((a) => a.id), ["report", "show", "lint"]);
+  assert.equal(st.choices["automode-doctor"], undefined, "an on-demand tool has nothing to switch on");
+  for (const id of ["report", "show", "lint"]) assert.equal(JSON.parse((await s.api("/api/action", { tool: "automode-doctor", action: id })).text).ok, true, id);
+  assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), [["claude-automode-doctor", "report"], ["claude-automode-doctor", "show", "--project", s.box.project], ["claude-automode-doctor", "lint", "--project", s.box.project]]);
+});
+
+test("MCP check is offered like settings doctor: two buttons, no switch, each run in the project", async (t) => {
+  const s = await start();
+  t.after(() => s.server.close());
+  const st = JSON.parse((await s.api("/api/state")).text);
+  const tool = st.tools.find((x) => x.id === "mcp-check");
+  assert.deepEqual([tool.scope, tool.installed, tool.removable, tool.recommended], ["action", false, false, false]);
+  assert.deepEqual(tool.actions.map((a) => a.id), ["show", "lint"]);
+  assert.equal(st.choices["mcp-check"], undefined, "an on-demand tool has nothing to switch on");
+  for (const id of ["show", "lint"]) assert.equal(JSON.parse((await s.api("/api/action", { tool: "mcp-check", action: id })).text).ok, true, id);
+  assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), ["show", "lint"].map((id) => ["claude-mcp-check", id, "--project", s.box.project]));
 });
 
 test("Done stops the server", async () => {

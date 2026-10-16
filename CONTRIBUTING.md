@@ -1,6 +1,6 @@
 # Contributing to Claude Code toolkit
 
-Thanks for helping. Claude Code toolkit is the home of fifteen small Claude Code tools: the one-click setup, one plugin marketplace for all of them, the website, and an end-to-end test of all fifteen together. The bar for a change is the bar the code already meets: it works on Windows, macOS and Linux, it is tested, and it never wastes anyone's tokens.
+Thanks for helping. Claude Code toolkit is the home of seventeen small Claude Code tools: the one-click setup, one plugin marketplace for all of them, the website, and an end-to-end test of all seventeen together. The bar for a change is the bar the code already meets: it works on Windows, macOS and Linux, it is tested, and it never wastes anyone's tokens.
 
 ## Start here
 
@@ -33,7 +33,7 @@ npm test
 | `src/server.mjs`, `src/ui/setup.html` | the setup page and its local server (127.0.0.1, one-time key, Host and Origin checks) |
 | `src/fetch.mjs`, `src/tar.mjs` | getting the tools from GitHub without npm or git |
 | `.claude-plugin/marketplace.json` | the plugin marketplace; every source is an https clone of a tool's repository |
-| `e2e/run.mjs` | the end-to-end test of all fifteen tools and of the setup |
+| `e2e/run.mjs` | the end-to-end test of all seventeen tools and of the setup |
 | `docs/index.html` | the website (GitHub Pages), one self-contained file |
 | `test/` | the setup's tests, and checks that the marketplace, README and website agree |
 
@@ -41,7 +41,7 @@ npm test
 
 1. **No dependencies.** Node built-ins only, Node 18 or newer, ES modules (`.mjs`). A pull request that adds a package to `dependencies` will not be merged.
 2. **Every change comes with a test**, and `npm test` passes. CI runs the suite on Windows, macOS and Linux with Node 20, 22 and 24, and on Linux with Node 18; a change that only works on one of them is not done.
-3. **Token cost is a feature.** A tool joins the toolkit only with a "What it costs in tokens" table in its README, and the end-to-end test keeps all plugins together under 200 always-on tokens by Claude Code's own estimate, and checks that the request sent to the model mentions none of their user-only skills. If your change puts anything new in front of Claude, say how many tokens in the pull request and update the README's "What it costs in tokens".
+3. **Token cost is a feature.** A tool joins the toolkit only with a "What it costs in tokens" table in its README, and the end-to-end test keeps all plugins together under 250 always-on tokens by Claude Code's own estimate, and checks that the request sent to the model mentions none of their user-only skills. If your change puts anything new in front of Claude, say how many tokens in the pull request and update the README's "What it costs in tokens".
 4. **Never touch real user data in tests.** Use a temporary folder and point `CLAUDE_CONFIG_DIR`, `HOME` and `USERPROFILE` at it. Tests never read `~/.claude/projects`; build synthetic transcripts instead. Build any fake secret from pieces (`"gh" + "p_" + ...`) so secret scanners do not flag the source.
 5. **Settings files are the user's.** If your change writes one: change only your own keys or hook entries, leave a file that is not valid JSON alone, and back up a user-level file before writing it (a project's file is in git).
 6. **Keep the README honest.** Its "What was verified, and how" section says what was checked and what was not. If your change affects either, update it in the same pull request.

@@ -94,6 +94,8 @@ export function readState({ env = process.env, project = process.cwd() } = {}) {
     "hook-bench": { installed: false, current: {} },
     relocate: { installed: false, current: {} },
     "settings-doctor": { installed: false, current: {} },
+    "automode-doctor": { installed: false, current: {} },
+    "mcp-check": { installed: false, current: {} },
   };
   for (const t of TOOLS) {
     // A tool's plugin under its name from any marketplace, or under its name until 4 October 2026 from our own

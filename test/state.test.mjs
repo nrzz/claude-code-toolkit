@@ -18,11 +18,11 @@ test("a fresh config: nothing installed, and the recommended tools start switche
   assert.equal(s.project.isGit, false);
 });
 
-test("tools that only run on demand (md-doctor, replay, chat-ferry, permission-doctor, hook-bench, relocate, settings-doctor) are never installed or switched on, and have nothing to read back", () => {
+test("tools that only run on demand (md-doctor, replay, chat-ferry, permission-doctor, hook-bench, relocate, settings-doctor, automode-doctor, mcp-check) are never installed or switched on, and have nothing to read back", () => {
   const { env, project } = sandbox();
   const s = readState({ env, project });
   const choices = defaultChoices(s);
-  for (const id of ["md-doctor", "replay", "chat-ferry", "permission-doctor", "hook-bench", "relocate", "settings-doctor"]) assert.deepEqual([s.tools[id].installed, s.tools[id].current, id in choices], [false, {}, false], id);
+  for (const id of ["md-doctor", "replay", "chat-ferry", "permission-doctor", "hook-bench", "relocate", "settings-doctor", "automode-doctor", "mcp-check"]) assert.deepEqual([s.tools[id].installed, s.tools[id].current, id in choices], [false, {}, false], id);
 });
 
 test("installed tools are found from their hooks, with their own settings read back", () => {
