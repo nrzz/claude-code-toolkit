@@ -149,6 +149,19 @@
         "url": "https://github.com/nrzz/claude-hook-bench.git"
       },
       "homepage": "https://github.com/nrzz/claude-hook-bench"
+    },
+    {
+      "name": "settings-doctor",
+      "description": "Comments for your Claude Code settings and the merged settings nobody shows you: a settings.jsonc that builds settings.json, the value every file contributes and which one wins, and a lint that finds the comment or trailing comma that makes Claude Code ignore a whole file, keys the schema does not know, wrong types and deprecated keys (/settings-doctor:check runs the lint for this project and answers in at most 10 lines). The claude-settings-doctor command does the same from a terminal, at no token cost. The skill is user-only and costs about 340 tokens when you run it.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-settings-doctor.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-settings-doctor"
     }
   ]
 }

@@ -1,4 +1,4 @@
-// The thirteen tools: where each lives, what it asks, and the exact command lines that install,
+// The fifteen tools: where each lives, what it asks, and the exact command lines that install,
 // change and remove it. Every command line is an argument array for the tool's own CLI, never a
 // shell string, so nothing a person types can become a command.
 
@@ -233,6 +233,29 @@ export const TOOLS = [
     actions: {
       list: { label: "List the hooks and check them", args: (o, ctx) => ["list", "--project", ctx.project] },
       run: { label: "Run every hook", args: (o, ctx) => ["run", "--project", ctx.project] },
+    },
+  },
+  {
+    id: "relocate", repo: "claude-relocate", bin: "bin/claude-relocate.mjs", scope: "action",
+    name: "Relocate", tokens: "0: runs outside Claude",
+    summary: "Moves Claude Code's config folder (settings, sessions, the plugin cache, .claude.json) to another drive or into the XDG folders, writes CLAUDE_CONFIG_DIR into your shell profiles and the Windows user environment, and puts everything back with undo. These buttons only look: the move itself is a command with --yes.",
+    defaults: {},
+    validate: () => ({}),
+    actions: {
+      plan: { label: "What is in the config folder, and how big", args: () => ["plan"] },
+      status: { label: "Where things are now", args: () => ["status"] },
+      verify: { label: "Check a move", args: () => ["verify"] },
+    },
+  },
+  {
+    id: "settings-doctor", repo: "claude-settings-doctor", bin: "bin/claude-settings-doctor.mjs", scope: "action",
+    name: "Settings doctor", tokens: "0: runs outside Claude",
+    summary: "The settings Claude Code merges, with the file each key came from and which file wins, and the mistakes in them: a comment or trailing comma that makes Claude Code ignore the whole file, keys the schema does not know, wrong types, deprecated keys. Keeps a commented settings.jsonc that builds settings.json.",
+    defaults: {},
+    validate: () => ({}),
+    actions: {
+      show: { label: "Show the merged settings", args: (o, ctx) => ["show", "--project", ctx.project] },
+      lint: { label: "Check the settings files", args: (o, ctx) => ["lint", "--project", ctx.project] },
     },
   },
 ];

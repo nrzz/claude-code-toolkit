@@ -7,7 +7,7 @@ const v = (id, o, ctx) => byId(id).validate(o, ctx);
 const bad = (id, o, re, ctx) => assert.throws(() => v(id, o, ctx), (e) => e instanceof OptionError && re.test(e.message));
 
 test("every tool has a repository, a command file, a summary, a token note and valid defaults", () => {
-  assert.equal(TOOLS.length, 13);
+  assert.equal(TOOLS.length, 15);
   for (const t of TOOLS) {
     assert.match(t.repo, /^claude-[a-z-]+$/, t.id);
     assert.match(t.bin, /\.mjs$/, t.id);
@@ -58,6 +58,26 @@ test("hook bench: an on-demand tool like permission doctor, with nothing to inst
   const ctx = { project: "/work/app" };
   assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["list", "--project", "/work/app"], ["run", "--project", "/work/app"]]);
   for (const a of Object.values(t.actions)) assert.equal(a.args({}, ctx).some((x) => /^--(input|plugin-dir|keep)$/.test(x)), false, "the page runs the setup's own hooks with the default fixtures");
+});
+
+test("relocate: an on-demand tool with nothing to install and three commands that only look, none of them the move", () => {
+  const t = byId("relocate");
+  assert.deepEqual([t.scope, t.plugin, !!t.recommended, t.install, t.change, t.uninstall], ["action", undefined, false, undefined, undefined, undefined]);
+  assert.deepEqual(v("relocate", { preset: "ignored" }), {}, "it has no options");
+  assert.deepEqual(Object.keys(t.actions), ["plan", "status", "verify"]);
+  const ctx = { project: "/work/app" };
+  assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["plan"], ["status"], ["verify"]]);
+  for (const a of Object.values(t.actions)) assert.equal(a.args({}, ctx).some((x) => x === "move" || x === "undo" || /^--(yes|to|xdg|link)$/.test(x)), false, "the page never moves the folder");
+});
+
+test("settings doctor: an on-demand tool like permission doctor, with nothing to install and two commands that only read, run in the project", () => {
+  const t = byId("settings-doctor");
+  assert.deepEqual([t.scope, t.plugin, !!t.recommended, t.install, t.change, t.uninstall], ["action", undefined, false, undefined, undefined, undefined]);
+  assert.deepEqual(v("settings-doctor", { preset: "ignored" }), {}, "it has no options");
+  assert.deepEqual(Object.keys(t.actions), ["show", "lint"]);
+  const ctx = { project: "/work/app" };
+  assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["show", "--project", "/work/app"], ["lint", "--project", "/work/app"]]);
+  for (const a of Object.values(t.actions)) assert.equal(["init", "build", "absorb", "watch", "restore"].includes(a.args({}, ctx)[0]), false, "the page never writes a settings file");
 });
 
 test("notify: a set line only for what differs, secrets kept unless replaced, an existing ntfy topic kept", () => {

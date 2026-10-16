@@ -365,6 +365,110 @@ if (want("hook-bench")) {
   check("hook-bench", "none of the runs changed a file under the config folder", snapshot() === before, snapshot());
 }
 
+// ---- relocate: the config folder moved to another folder and back ---------------------------------------------
+// Its own home folder: a config folder with settings, a session, a plugin file and a .claude.json, moved to a
+// sibling folder with --no-env (so no shell profile and no Windows user environment outside the sandbox changes)
+// and --ignore-running (a Claude Code may be open on the machine that runs this; the sandbox is not its folder),
+// then put back with undo. Every file must come back byte for byte, and the dry run and the run without --yes
+// must change nothing.
+if (want("relocate")) {
+  const rlHome = path.join(base, "rl");
+  const rlCfg = path.join(rlHome, ".claude");
+  const rlDest = path.join(rlHome, "moved-claude");
+  fs.mkdirSync(path.join(rlCfg, "projects", "-work-app"), { recursive: true });
+  fs.mkdirSync(path.join(rlCfg, "plugins", "cache"), { recursive: true });
+  fs.writeFileSync(path.join(rlCfg, "settings.json"), JSON.stringify(ORIGINAL, null, 2) + "\n");
+  fs.writeFileSync(path.join(rlCfg, "projects", "-work-app", "11111111-2222-4333-8444-555555555555.jsonl"), '{"type":"user","message":{"role":"user","content":"hello"}}\n');
+  fs.writeFileSync(path.join(rlCfg, "plugins", "cache", "index.json"), "{}\n");
+  fs.writeFileSync(path.join(rlCfg, ".claude.json"), JSON.stringify({ hasCompletedOnboarding: true }) + "\n");
+  const rlEnv = { HOME: rlHome, USERPROFILE: rlHome, CLAUDE_CONFIG_DIR: rlCfg };
+  const relocate = (argv, env = {}) => tool("claude-relocate", "bin/claude-relocate.mjs", argv, { cwd: rlHome, env: { ...rlEnv, ...env } });
+  // Every name and every byte below a folder, except the tool's own manifest.
+  const tree = (dir) => (fs.existsSync(dir) ? fs.readdirSync(dir, { recursive: true }) : []).map(String).filter((f) => !/relocate-manifest\.json$/.test(f)).map((f) => {
+    const p = path.join(dir, f);
+    const st = fs.lstatSync(p);
+    return `${f.replace(/\\/g, "/")}:${st.isDirectory() ? "dir" : st.isSymbolicLink() ? "link" : fs.readFileSync(p).toString("base64")}`;
+  }).sort().join("\n");
+  const before = tree(rlCfg);
+  const plan = relocate(["plan", "--to", rlDest, "--json"]);
+  const pm = parse(plan.out);
+  check("relocate", "plan --json sorts the folder into kinds with their sizes, names the destination and finds nothing wrong",
+    plan.code === 0 && pm?.ok === true && pm.problems?.length === 0 && pm.total?.files === 4 && ["settings", "sessions", "pluginCache", "claudeJson"].every((k) => pm.kinds?.some((x) => x.kind === k && x.files === 1))
+      && path.resolve(pm.destination?.config || "") === path.resolve(rlDest), plan.out.slice(0, 800) + plan.err);
+  const dry = relocate(["move", "--to", rlDest, "--no-env", "--ignore-running", "--dry-run", "--json"]);
+  check("relocate", "move --dry-run lists its steps and changes nothing", dry.code === 0 && parse(dry.out)?.dryRun === true && tree(rlCfg) === before && !fs.existsSync(rlDest), dry.out.slice(0, 400) + dry.err);
+  const noYes = relocate(["move", "--to", rlDest, "--no-env", "--ignore-running", "--json"]);
+  check("relocate", "move without --yes refuses and changes nothing", noYes.code === 1 && parse(noYes.out)?.needsYes === true && tree(rlCfg) === before && !fs.existsSync(rlDest), noYes.out.slice(0, 400) + noYes.err);
+  const mv = relocate(["move", "--to", rlDest, "--no-env", "--ignore-running", "--yes", "--json"]);
+  check("relocate", "move --yes moves every file byte for byte, writes its manifest in the new folder and leaves nothing at the old place",
+    mv.code === 0 && parse(mv.out)?.ok === true && tree(rlDest) === before && fs.existsSync(path.join(rlDest, "relocate-manifest.json")) && !fs.existsSync(path.join(rlCfg, "settings.json")), mv.out.slice(0, 600) + mv.err);
+  const st = relocate(["status", "--json"], { CLAUDE_CONFIG_DIR: rlDest });
+  const sm = parse(st.out);
+  check("relocate", "status --json knows the move: where from, where to", st.code === 0 && !!sm?.moved && path.resolve(sm.moved.from) === path.resolve(rlCfg) && path.resolve(sm.moved.to) === path.resolve(rlDest), st.out.slice(0, 600) + st.err);
+  const un = relocate(["undo", "--ignore-running", "--yes", "--json"], { CLAUDE_CONFIG_DIR: rlDest });
+  check("relocate", "undo --yes puts the folder back byte for byte and leaves nothing in the moved place",
+    un.code === 0 && parse(un.out)?.ok === true && tree(rlCfg) === before && (!fs.existsSync(rlDest) || fs.readdirSync(rlDest).length === 0), un.out.slice(0, 600) + un.err);
+}
+
+// ---- settings-doctor: the merged settings with their source, and the mistakes Claude Code ignores in silence ------
+// Its own config folder and project. The user file has an unknown key, the project file sets a key the user file
+// also sets, the local file has a trailing comma, which makes Claude Code ignore it whole, and a fourth file with a
+// value of the wrong type is checked on its own with --file (in a settings file that applies, a wrong type costs
+// the whole file, which would hide the merge). The tool writes only with init, build, absorb, watch and restore, so
+// the read-only runs may change nothing; then init writes a settings.jsonc, build writes settings.json from an edit
+// to it, and check sees drift.
+// The marketplace section reuses this folder.
+const sd = { cfg: path.join(base, "sd", ".claude"), project: path.join(base, "sd", "app") };
+fs.mkdirSync(sd.cfg, { recursive: true });
+fs.mkdirSync(path.join(sd.project, ".claude"), { recursive: true });
+if (want("settings-doctor")) {
+  const userFile = path.join(sd.cfg, "settings.json");
+  const projectFile = path.join(sd.project, ".claude", "settings.json");
+  const jsonc = path.join(sd.project, ".claude", "settings.jsonc");
+  fs.writeFileSync(userFile, JSON.stringify({ model: "sonnet", permissions: { defaultMode: "acceptEdits" }, unknownKey: true }, null, 2) + "\n");
+  const wrongFile = path.join(sd.project, "wrong-type.json");
+  fs.writeFileSync(wrongFile, JSON.stringify({ cleanupPeriodDays: "30" }, null, 2) + "\n");
+  fs.writeFileSync(projectFile, JSON.stringify({ permissions: { defaultMode: "plan" } }, null, 2) + "\n");
+  fs.writeFileSync(path.join(sd.project, ".claude", "settings.local.json"), '{\n  "model": "opus",\n}\n');
+  const before = fs.readFileSync(userFile);
+  const doctor = (argv) => tool("claude-settings-doctor", "bin/claude-settings-doctor.mjs", [...argv, "--project", sd.project], { cwd: sd.project, env: { CLAUDE_CONFIG_DIR: sd.cfg } });
+  const lint = doctor(["lint", "--json"]);
+  const lm = parse(lint.out);
+  const ids = (lm?.findings || []).map((f) => `${f.id}:${f.scope}`);
+  check("settings-doctor", "lint --json finds the unknown key in the user file and the trailing comma that makes Claude Code ignore the local file",
+    lint.code === 1 && ids.includes("unknown-key:user") && ids.includes("invalid-json:local") && lm.counts?.error >= 1, lint.out.slice(0, 800) + lint.err);
+  const one = doctor(["lint", "--file", wrongFile, "--json"]);
+  const om = parse(one.out);
+  check("settings-doctor", "lint --file finds the value of the wrong type in a file checked on its own", one.code === 1 && (om?.findings || []).some((f) => f.id === "wrong-type" && f.severity === "error"), one.out.slice(0, 600) + one.err);
+  const show = doctor(["show", "--json"]);
+  const smd = parse(show.out);
+  const mode = smd?.entries?.find((e) => e.path === "permissions.defaultMode");
+  check("settings-doctor", "show --json merges the files: the project's defaultMode wins over the user's, which is listed as shadowed, and the ignored local file sets nothing",
+    show.code === 0 && mode?.value === "plan" && mode.source?.scope === "project" && mode.shadowed?.some((s) => s.source?.scope === "user" && s.value === "acceptEdits")
+      && smd.entries.find((e) => e.path === "model")?.source?.scope === "user" && smd.files?.find((f) => f.scope === "local")?.state === "ignored by Claude Code", show.out.slice(0, 800) + show.err);
+  const explain = doctor(["explain", "permissions.defaultMode", "--json"]);
+  const em = parse(explain.out);
+  check("settings-doctor", "explain permissions.defaultMode --json gives the schema's values and the file that sets it now",
+    explain.code === 0 && em?.found === true && Array.isArray(em.enum) && em.enum.includes("plan") && em.winner?.scope === "project", explain.out.slice(0, 600) + explain.err);
+  check("settings-doctor", "none of the four read-only runs changed the user file or wrote anything next to it", fs.readFileSync(userFile).equals(before) && fs.readdirSync(sd.cfg).sort().join() === "settings.json", fs.readdirSync(sd.cfg).join());
+  const dryInit = doctor(["init", "--dry-run", "--json"]);
+  check("settings-doctor", "init --dry-run says what it would write and writes nothing", dryInit.code === 0 && !fs.existsSync(jsonc), dryInit.out.slice(0, 400) + dryInit.err);
+  const init = doctor(["init", "--json"]);
+  const jsoncText = fs.existsSync(jsonc) ? fs.readFileSync(jsonc, "utf8") : "";
+  check("settings-doctor", "init writes settings.jsonc next to the project's settings.json, with the key explained in a comment", init.code === 0 && jsoncText.includes("//") && jsoncText.includes("defaultMode"), init.out.slice(0, 400) + init.err + jsoncText.slice(0, 300));
+  const same = doctor(["check", "--json"]);
+  check("settings-doctor", "check finds no difference right after init", same.code === 0, same.out.slice(0, 400) + same.err);
+  fs.writeFileSync(jsonc, jsoncText.replace(/^\{[ \t]*$/m, '{\n  // keep the model small\n  "model": "haiku",'));
+  const build = doctor(["build", "--json"]);
+  const built = parse(fs.readFileSync(projectFile, "utf8"));
+  const backups = fs.readdirSync(path.join(sd.project, ".claude")).filter((f) => f.includes(".bak-settings-doctor-"));
+  check("settings-doctor", "build writes settings.json from the edited settings.jsonc: the new key is there, no comment is, and a backup was made first",
+    build.code === 0 && built?.model === "haiku" && built.permissions?.defaultMode === "plan" && !fs.readFileSync(projectFile, "utf8").includes("//") && backups.length >= 1, build.out.slice(0, 600) + build.err + fs.readdirSync(path.join(sd.project, ".claude")).join());
+  fs.writeFileSync(projectFile, fs.readFileSync(projectFile, "utf8").replace(/\}\s*$/, '  ,"theme": "light"\n}\n').replace('"plan"\n  }\n  ,', '"plan"\n  },\n '));
+  const drift = doctor(["check", "--json"]);
+  check("settings-doctor", "check exits 1 once settings.json was edited by hand", drift.code === 1, `exit ${drift.code}: ${drift.out.slice(0, 400)}${drift.err}`);
+}
+
 // ---- starter-kits, then md-doctor on what they wrote -----------------------------------------------
 if (want("starter") || want("md-doctor")) {
   const k = tool("claude-code-starter-kits", "bin/claude-starter.mjs", [], { cwd: project });
@@ -562,6 +666,15 @@ if (want("marketplace")) {
     const hbReports = hbLines.map((line) => run(line.replaceAll("${CLAUDE_PLUGIN_ROOT}", hbPlugin.installPath).replaceAll("${CLAUDE_PROJECT_DIR}", hb.project), [], { cwd: hb.project, env: { ...pEnv, CLAUDE_CONFIG_DIR: hb.cfg }, shell: true }));
     check("marketplace", "the hook-bench plugin's skill runs the bench's markdown report from the installed copy",
       hbReports.length === 1 && hbReports[0].code === 0 && /^## hook-bench: /m.test(hbReports[0].out) && (!want("hook-bench") || (/\| PreToolUs \| skipped \|/.test(hbReports[0].out) && /systemMessage: expected string/.test(hbReports[0].out))), hbReports.map((r) => r.out + r.err).join("\n---\n"));
+    // settings-doctor has no hook either: its skill's one `!` line runs the lint for the project. Run it as written
+    // from the installed copy against the settings-doctor config and project made above (the unknown key, the wrong
+    // type, the trailing comma). The lint exits 1 when it finds something, which is the point.
+    const sdPlugin = list.find((p) => p.id === "settings-doctor@claude-code-toolkit");
+    const sdSkill = sdPlugin ? fs.readFileSync(path.join(sdPlugin.installPath, "skills", "check", "SKILL.md"), "utf8").replace(/\r\n/g, "\n") : "";
+    const sdLines = sdSkill.split("\n").map((l) => /^!\x60(.*)\x60$/.exec(l)?.[1]).filter(Boolean);
+    const sdReports = sdLines.map((line) => run(line.replaceAll("${CLAUDE_PLUGIN_ROOT}", sdPlugin.installPath).replaceAll("${CLAUDE_PROJECT_DIR}", sd.project), [], { cwd: sd.project, env: { ...pEnv, CLAUDE_CONFIG_DIR: sd.cfg }, shell: true }));
+    check("marketplace", "the settings-doctor plugin's skill runs its lint report from the installed copy",
+      sdReports.length === 1 && /^## settings-doctor lint/m.test(sdReports[0].out) && (!want("settings-doctor") || (sdReports[0].out.includes("unknown-key") && sdReports[0].out.includes("invalid-json"))), sdReports.map((r) => r.out + r.err).join("\n---\n"));
     let total = 0;
     for (const name of names) {
       const d = claude(["plugin", "details", `${name}@claude-code-toolkit`]);
@@ -632,7 +745,7 @@ if (want("setup")) {
     for (let i = 0; i < 120 && !state?.ready; i++) { state = await (await api("/api/state")).json(); if (!state.ready) await new Promise((r) => setTimeout(r, 500)); }
     // The four installed above; project tools depend on what earlier sections left in the project.
     const userInstalled = (state?.tools || []).filter((t) => t.scope === "user" && t.installed).map((t) => t.id);
-    check("setup", "it fetched all thirteen tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
+    check("setup", "it fetched all fifteen tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
       JSON.stringify({ failed: state?.failed, userInstalled, glowThemes: state?.glowThemes?.length }));
     const applied = await (await api("/api/apply", { choices: { glow: { enabled: true, options: { theme: "nord", icons: "unicode", uiTheme: true } }, notify: { enabled: false } } })).text();
     const last = parse(applied.trim().split("\n").pop());
@@ -673,6 +786,6 @@ if (!results.length) failed.push({ area: "e2e", what: `no checks ran${only.lengt
 const passed = results.filter((r) => r.ok).length;
 console.log(results.length
   ? `\n${passed} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map((f) => `${f.area}: ${f.what}`).join("; ")}` : ""}.`
-  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, permission-doctor, hook-bench, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
+  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, permission-doctor, hook-bench, relocate, settings-doctor, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
 if (!args.includes("--keep")) fs.rmSync(base, { recursive: true, force: true });
 process.exitCode = failed.length ? 1 : 0;

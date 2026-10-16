@@ -64,7 +64,7 @@ test("the state lists all thirteen tools, the recommended ones switched on, and 
   const s = await start();
   t.after(() => s.server.close());
   const st = JSON.parse((await s.api("/api/state")).text);
-  assert.equal(st.tools.length, 13);
+  assert.equal(st.tools.length, 15);
   assert.equal(st.ready, true);
   assert.deepEqual(st.glowThemes.map((x) => x.slug), ["classic", "nord"]);
   assert.deepEqual(Object.entries(st.choices).filter(([, c]) => c.enabled).map(([id]) => id), ["guardrails", "notify", "glow"]);
@@ -154,6 +154,30 @@ test("hook bench is offered like permission doctor: two buttons, no switch, each
   assert.equal(st.choices["hook-bench"], undefined, "an on-demand tool has nothing to switch on");
   for (const id of ["list", "run"]) assert.equal(JSON.parse((await s.api("/api/action", { tool: "hook-bench", action: id })).text).ok, true, id);
   assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), ["list", "run"].map((id) => ["claude-hook-bench", id, "--project", s.box.project]));
+});
+
+test("relocate is offered like hook bench: three buttons that only look, no switch", async (t) => {
+  const s = await start();
+  t.after(() => s.server.close());
+  const st = JSON.parse((await s.api("/api/state")).text);
+  const tool = st.tools.find((x) => x.id === "relocate");
+  assert.deepEqual([tool.scope, tool.installed, tool.removable, tool.recommended], ["action", false, false, false]);
+  assert.deepEqual(tool.actions.map((a) => a.id), ["plan", "status", "verify"]);
+  assert.equal(st.choices.relocate, undefined, "an on-demand tool has nothing to switch on");
+  for (const id of ["plan", "status", "verify"]) assert.equal(JSON.parse((await s.api("/api/action", { tool: "relocate", action: id })).text).ok, true, id);
+  assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), ["plan", "status", "verify"].map((id) => ["claude-relocate", id]));
+});
+
+test("settings doctor is offered like permission doctor: two buttons, no switch, each run in the project", async (t) => {
+  const s = await start();
+  t.after(() => s.server.close());
+  const st = JSON.parse((await s.api("/api/state")).text);
+  const tool = st.tools.find((x) => x.id === "settings-doctor");
+  assert.deepEqual([tool.scope, tool.installed, tool.removable, tool.recommended], ["action", false, false, false]);
+  assert.deepEqual(tool.actions.map((a) => a.id), ["show", "lint"]);
+  assert.equal(st.choices["settings-doctor"], undefined, "an on-demand tool has nothing to switch on");
+  for (const id of ["show", "lint"]) assert.equal(JSON.parse((await s.api("/api/action", { tool: "settings-doctor", action: id })).text).ok, true, id);
+  assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), ["show", "lint"].map((id) => ["claude-settings-doctor", id, "--project", s.box.project]));
 });
 
 test("Done stops the server", async () => {
