@@ -559,6 +559,56 @@ if (want("mcp-check")) {
     dry.code === 0 && parse(dry.out)?.changes?.[0]?.key === "disabledMcpjsonServers" && files() === before, dry.out.slice(0, 600) + dry.err);
 }
 
+// ---- sandbox-doctor: the sandbox settings, the entry that never takes effect, and where a command runs -------------
+// Its own config folder and project. The project file turns the sandbox on, takes docker out of it with an
+// excludedCommands entry, and allows a domain written with a scheme and a path, which never equals a host name. The
+// answers of why come from the settings, so they are the same on every system; check describes the host it runs on
+// (on Windows: no Bash sandbox). The tool only reads. The marketplace section reuses this folder.
+const sb = { cfg: path.join(base, "sb", ".claude"), project: path.join(base, "sb", "app") };
+fs.mkdirSync(sb.cfg, { recursive: true });
+fs.mkdirSync(path.join(sb.project, ".claude"), { recursive: true });
+if (want("sandbox-doctor")) {
+  const projectFile = path.join(sb.project, ".claude", "settings.json");
+  fs.writeFileSync(projectFile, JSON.stringify({ sandbox: { enabled: true, excludedCommands: ["docker *"], network: { allowedDomains: ["https://example.com/path"] } } }, null, 2) + "\n");
+  const before = fs.readFileSync(projectFile);
+  const doc = (argv) => tool("claude-sandbox-doctor", "bin/claude-sandbox-doctor.mjs", argv, { cwd: sb.project, env: { CLAUDE_CONFIG_DIR: sb.cfg } });
+  const lint = doc(["lint", "--project", sb.project, "--json"]);
+  check("sandbox-doctor", "lint --json finds the allowedDomains entry with a scheme, which never equals a host name, in the project file",
+    lint.code === 1 && (parse(lint.out)?.findings || []).some((f) => f.id === "domain-scheme" && f.scope === "project"), lint.out.slice(0, 800) + lint.err);
+  const show = doc(["show", "--project", sb.project, "--json"]);
+  const sm = parse(show.out);
+  check("sandbox-doctor", "show --json merges the sandbox settings and names the project file as the source",
+    show.code === 0 && sm?.values?.enabled?.winner?.value === true && sm.values.enabled.winner.source?.scope === "project" && sm.lists?.excludedCommands?.[0]?.value === "docker *", show.out.slice(0, 800) + show.err);
+  const out = doc(["why", "docker ps", "--project", sb.project, "--json"]);
+  const inside = doc(["why", "ls -la", "--project", sb.project, "--json"]);
+  check("sandbox-doctor", "why: docker ps runs outside the sandbox through its excludedCommands entry, ls -la inside it",
+    out.code === 0 && parse(out.out)?.verdict === "unsandboxed" && inside.code === 0 && parse(inside.out)?.verdict === "sandboxed", out.out.slice(0, 400) + inside.out.slice(0, 400) + out.err + inside.err);
+  const host = doc(["check", "--json"]);
+  const hm = parse(host.out);
+  check("sandbox-doctor", "check --json describes this host, and on Windows says there is no Bash sandbox",
+    (host.code === 0 || host.code === 1) && typeof hm?.hasSandbox === "boolean" && (process.platform !== "win32" || hm.hasSandbox === false), host.out.slice(0, 600) + host.err);
+  check("sandbox-doctor", "none of the runs changed the settings file", fs.readFileSync(projectFile).equals(before), "");
+}
+
+// ---- windows-doctor: the shell the Bash tool gets on Windows, and nothing to check elsewhere ---------------------
+// Its own config folder and project. check only reads: on Windows it reports the tools the model would get and
+// why, on Linux and macOS it says there is nothing to check and exits 0. fix and undo are never run here, because
+// they change the Windows user environment of the machine that runs this test. The marketplace section reuses
+// this folder.
+const wd = { cfg: path.join(base, "wd", ".claude"), project: path.join(base, "wd", "app") };
+fs.mkdirSync(wd.cfg, { recursive: true });
+fs.mkdirSync(wd.project, { recursive: true });
+if (want("windows-doctor")) {
+  const wdoc = (argv) => tool("claude-windows-doctor", "bin/claude-windows-doctor.mjs", argv, { cwd: wd.project, env: { CLAUDE_CONFIG_DIR: wd.cfg } });
+  const chk = wdoc(["check", "--project", wd.project, "--json"]);
+  const cm = parse(chk.out);
+  check("windows-doctor", process.platform === "win32" ? "check --json reports which tools the model would get, Bash and PowerShell, and why" : "check --json says there is nothing to check on this system and exits 0",
+    process.platform === "win32" ? (chk.code === 0 || chk.code === 1) && cm?.applicable === true && typeof cm.shell?.tools === "object" && "Bash" in cm.shell.tools : chk.code === 0 && cm?.applicable === false, chk.out.slice(0, 800) + chk.err);
+  const ex = wdoc(["explain", "git-bash-not-found", "--json"]);
+  check("windows-doctor", "explain git-bash-not-found --json says what the finding means and how to fix it", ex.code === 0 && parse(ex.out)?.id === "git-bash-not-found" && !!parse(ex.out)?.fix, ex.out.slice(0, 600) + ex.err);
+  check("windows-doctor", "the read-only runs wrote nothing into the config folder or the project", fs.readdirSync(wd.cfg).length === 0 && fs.readdirSync(wd.project).length === 0, fs.readdirSync(wd.cfg).join() + " | " + fs.readdirSync(wd.project).join());
+}
+
 // ---- starter-kits, then md-doctor on what they wrote -----------------------------------------------
 if (want("starter") || want("md-doctor")) {
   const k = tool("claude-code-starter-kits", "bin/claude-starter.mjs", [], { cwd: project });
@@ -778,6 +828,12 @@ if (want("marketplace")) {
     const mcReports = skillReports("mcp-check@claude-code-toolkit", mc.cfg, mc.project);
     check("marketplace", "the mcp-check plugin's skill runs its lint report for the project from the installed copy",
       mcReports.length === 1 && mcReports[0].code === 0 && /^## mcp-check lint/m.test(mcReports[0].out) && (!want("mcp-check") || mcReports[0].out.includes("variable-unset")), mcReports.map((r) => r.out + r.err).join("\n---\n"));
+    const sbReports = skillReports("sandbox-doctor@claude-code-toolkit", sb.cfg, sb.project);
+    check("marketplace", "the sandbox-doctor plugin's skill runs its lint and host check from the installed copy",
+      sbReports.length === 2 && sbReports.every((r) => r.code === 0) && /^## sandbox-doctor lint/m.test(sbReports[0].out) && /^## sandbox-doctor check/m.test(sbReports[1].out) && (!want("sandbox-doctor") || sbReports[0].out.includes("domain-scheme")), sbReports.map((r) => r.out + r.err).join("\n---\n"));
+    const wdReports = skillReports("windows-doctor@claude-code-toolkit", wd.cfg, wd.project);
+    check("marketplace", "the windows-doctor plugin's skill runs its check for the project from the installed copy",
+      wdReports.length === 1 && wdReports[0].code === 0 && /^## windows-doctor check/m.test(wdReports[0].out), wdReports.map((r) => r.out + r.err).join("\n---\n"));
     let total = 0;
     for (const name of names) {
       const d = claude(["plugin", "details", `${name}@claude-code-toolkit`]);
@@ -787,7 +843,7 @@ if (want("marketplace")) {
     // The estimate counts the description of every user-only skill, and Claude Code never sends those to the
     // model; a new tool's skill adds 9 to 17 to it. The gate is the request that really went to the model (captured
     // above, with every plugin installed), which must mention none of those skills; the estimate stays a tripwire,
-    // under 250 since 1.7.0 (fourteen plugins come to about 212), so a skill the model can invoke cannot slip in.
+    // under 250 since 1.7.0 (sixteen plugins come to about 233), so a skill the model can invoke cannot slip in.
     check("marketplace", `all plugins together: about ${total} always-on tokens, by Claude Code's own estimate (limit 250)`, total < 250, String(total));
     const hud = list.find((p) => p.id === "glowbar@claude-code-toolkit");
     if (hud) {
@@ -849,7 +905,7 @@ if (want("setup")) {
     for (let i = 0; i < 120 && !state?.ready; i++) { state = await (await api("/api/state")).json(); if (!state.ready) await new Promise((r) => setTimeout(r, 500)); }
     // The four installed above; project tools depend on what earlier sections left in the project.
     const userInstalled = (state?.tools || []).filter((t) => t.scope === "user" && t.installed).map((t) => t.id);
-    check("setup", "it fetched all seventeen tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
+    check("setup", "it fetched all nineteen tools and sees what is installed", state?.ready && state.failed.length === 0 && userInstalled.length === 4 && state.glowThemes.length >= 15,
       JSON.stringify({ failed: state?.failed, userInstalled, glowThemes: state?.glowThemes?.length }));
     const applied = await (await api("/api/apply", { choices: { glow: { enabled: true, options: { theme: "nord", icons: "unicode", uiTheme: true } }, notify: { enabled: false } } })).text();
     const last = parse(applied.trim().split("\n").pop());
@@ -890,6 +946,6 @@ if (!results.length) failed.push({ area: "e2e", what: `no checks ran${only.lengt
 const passed = results.filter((r) => r.ok).length;
 console.log(results.length
   ? `\n${passed} of ${results.length} checks passed${failed.length ? `; failed: ${failed.map((f) => `${f.area}: ${f.what}`).join("; ")}` : ""}.`
-  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, permission-doctor, hook-bench, relocate, settings-doctor, automode-doctor, mcp-check, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
+  : `\nNo checks ran${only.length ? ` (--only ${only.join(",")} names no section: glow, guardrails, notify, cost-guard, replay, chat-ferry, session-tidy, permission-doctor, hook-bench, relocate, settings-doctor, automode-doctor, mcp-check, sandbox-doctor, windows-doctor, starter, md-doctor, team-sync, handover, setup, marketplace)` : ""}.`);
 if (!args.includes("--keep")) fs.rmSync(base, { recursive: true, force: true });
 process.exitCode = failed.length ? 1 : 0;

@@ -16,7 +16,7 @@ const SITE = read("docs/index.html");
 const TOOLS = [
   "claude-code-handover", "claude-code-team-sync", "claude-code-glow", "claude-code-guardrails", "claude-code-notify",
   "claude-cost-guard", "claude-md-doctor", "claude-code-starter-kits", "claude-session-replay", "claude-chat-ferry",
-  "claude-session-tidy", "claude-permission-doctor", "claude-hook-bench", "claude-relocate", "claude-settings-doctor", "claude-automode-doctor", "claude-mcp-check",
+  "claude-session-tidy", "claude-permission-doctor", "claude-hook-bench", "claude-relocate", "claude-settings-doctor", "claude-automode-doctor", "claude-mcp-check", "claude-sandbox-doctor", "claude-windows-doctor",
 ];
 
 test("marketplace: named claude-code-toolkit, unique plugin names, every field filled", () => {
@@ -86,7 +86,7 @@ test("the link preview image's source names every tool, says how many, and gives
   const chips = [...src.matchAll(/<span class="chip">([^<]+)<\/span>/g)].map((m) => m[1]);
   // A chip is the tool's short name: its repository name without the claude-, code- or session- prefix.
   assert.deepEqual([...chips].sort(), TOOLS.map((t) => t.replace(/^claude-(code-|session-)?/, "")).sort());
-  const words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen"];
+  const words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
   assert.match(src, new RegExp(`<h1>${words[TOOLS.length]} small tools`));
   const tests = /Over ([\d,]+) automated tests/.exec(README)?.[1];
   assert.ok(src.includes(`${tests}+ tests`), `${tests}+ tests`);

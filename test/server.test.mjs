@@ -64,7 +64,7 @@ test("the state lists all thirteen tools, the recommended ones switched on, and 
   const s = await start();
   t.after(() => s.server.close());
   const st = JSON.parse((await s.api("/api/state")).text);
-  assert.equal(st.tools.length, 17);
+  assert.equal(st.tools.length, 19);
   assert.equal(st.ready, true);
   assert.deepEqual(st.glowThemes.map((x) => x.slug), ["classic", "nord"]);
   assert.deepEqual(Object.entries(st.choices).filter(([, c]) => c.enabled).map(([id]) => id), ["guardrails", "notify", "glow"]);
@@ -202,6 +202,30 @@ test("MCP check is offered like settings doctor: two buttons, no switch, each ru
   assert.equal(st.choices["mcp-check"], undefined, "an on-demand tool has nothing to switch on");
   for (const id of ["show", "lint"]) assert.equal(JSON.parse((await s.api("/api/action", { tool: "mcp-check", action: id })).text).ok, true, id);
   assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), ["show", "lint"].map((id) => ["claude-mcp-check", id, "--project", s.box.project]));
+});
+
+test("sandbox doctor is offered like auto mode doctor: three buttons that only read, no switch, the host check without the project", async (t) => {
+  const s = await start();
+  t.after(() => s.server.close());
+  const st = JSON.parse((await s.api("/api/state")).text);
+  const tool = st.tools.find((x) => x.id === "sandbox-doctor");
+  assert.deepEqual([tool.scope, tool.installed, tool.removable, tool.recommended], ["action", false, false, false]);
+  assert.deepEqual(tool.actions.map((a) => a.id), ["check", "show", "lint"]);
+  assert.equal(st.choices["sandbox-doctor"], undefined, "an on-demand tool has nothing to switch on");
+  for (const id of ["check", "show", "lint"]) assert.equal(JSON.parse((await s.api("/api/action", { tool: "sandbox-doctor", action: id })).text).ok, true, id);
+  assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), [["claude-sandbox-doctor", "check"], ["claude-sandbox-doctor", "show", "--project", s.box.project], ["claude-sandbox-doctor", "lint", "--project", s.box.project]]);
+});
+
+test("windows doctor is offered with one button that only reads, run in the project, and no switch", async (t) => {
+  const s = await start();
+  t.after(() => s.server.close());
+  const st = JSON.parse((await s.api("/api/state")).text);
+  const tool = st.tools.find((x) => x.id === "windows-doctor");
+  assert.deepEqual([tool.scope, tool.installed, tool.removable, tool.recommended], ["action", false, false, false]);
+  assert.deepEqual(tool.actions.map((a) => a.id), ["check"]);
+  assert.equal(st.choices["windows-doctor"], undefined, "an on-demand tool has nothing to switch on");
+  assert.equal(JSON.parse((await s.api("/api/action", { tool: "windows-doctor", action: "check" })).text).ok, true);
+  assert.deepEqual(s.tools.calls().map((c) => [c.repo, ...c.args]), [["claude-windows-doctor", "check", "--project", s.box.project]]);
 });
 
 test("Done stops the server", async () => {

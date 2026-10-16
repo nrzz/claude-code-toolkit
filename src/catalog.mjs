@@ -1,4 +1,4 @@
-// The seventeen tools: where each lives, what it asks, and the exact command lines that install,
+// The nineteen tools: where each lives, what it asks, and the exact command lines that install,
 // change and remove it. Every command line is an argument array for the tool's own CLI, never a
 // shell string, so nothing a person types can become a command.
 
@@ -279,6 +279,28 @@ export const TOOLS = [
     actions: {
       show: { label: "Show the MCP servers and where each comes from", args: (o, ctx) => ["show", "--project", ctx.project] },
       lint: { label: "Check the MCP configuration", args: (o, ctx) => ["lint", "--project", ctx.project] },
+    },
+  },
+  {
+    id: "sandbox-doctor", repo: "claude-sandbox-doctor", bin: "bin/claude-sandbox-doctor.mjs", scope: "action",
+    name: "Sandbox doctor", tokens: "0: runs outside Claude",
+    summary: "Whether Claude Code's Bash sandbox can work on this machine (bubblewrap, socat and user namespaces on Linux, seatbelt on macOS; Windows has no Bash sandbox), the merged sandbox settings with the file each came from, and the settings that can never take effect, such as an allowedDomains entry with a scheme. Its why command says whether a command runs inside the sandbox, outside it, or not at all, the way Claude Code decides it.",
+    defaults: {},
+    validate: () => ({}),
+    actions: {
+      check: { label: "Can the sandbox work on this machine?", args: () => ["check"] },
+      show: { label: "Show the sandbox settings", args: (o, ctx) => ["show", "--project", ctx.project] },
+      lint: { label: "Check the sandbox settings", args: (o, ctx) => ["lint", "--project", ctx.project] },
+    },
+  },
+  {
+    id: "windows-doctor", repo: "claude-windows-doctor", bin: "bin/claude-windows-doctor.mjs", scope: "action",
+    name: "Windows doctor", tokens: "0: runs outside Claude",
+    summary: "On Windows: which shell Claude Code's Bash tool will get and why (Git Bash found or not, CLAUDE_CODE_GIT_BASH_PATH, the PowerShell tool), every claude on the machine and which one runs first, and the setup problems behind common Windows issues: long paths, core.autocrlf, the PowerShell execution policy, variables set for one process but not the user. On Linux and macOS it says there is nothing to check.",
+    defaults: {},
+    validate: () => ({}),
+    actions: {
+      check: { label: "Check this Windows setup", args: (o, ctx) => ["check", "--project", ctx.project] },
     },
   },
 ];

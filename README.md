@@ -2,7 +2,7 @@
 
 [![e2e](https://github.com/nrzz/claude-code-toolkit/actions/workflows/e2e.yml/badge.svg)](https://github.com/nrzz/claude-code-toolkit/actions/workflows/e2e.yml) [![test](https://github.com/nrzz/claude-code-toolkit/actions/workflows/test.yml/badge.svg)](https://github.com/nrzz/claude-code-toolkit/actions/workflows/test.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) ![node >= 18](https://img.shields.io/badge/node-%3E%3D18-339933.svg) ![dependencies: none](https://img.shields.io/badge/dependencies-none-brightgreen.svg)
 
-Seventeen small, open-source tools that make Claude Code cheaper, safer and easier to share. Each one is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all seventeen are tested together, installed from GitHub, on Windows, macOS and Linux.
+Nineteen small, open-source tools that make Claude Code cheaper, safer and easier to share. Each one is a dependency-free Node command or plugin that adds few or no tokens to your sessions, and all nineteen are tested together, installed from GitHub, on Windows, macOS and Linux.
 
 Website: [nrzz.github.io/claude-code-toolkit](https://nrzz.github.io/claude-code-toolkit/)
 
@@ -45,6 +45,8 @@ npx -y github:nrzz/claude-code-toolkit install recommended --theme nord --daily 
 | Comment your settings, see what Claude Code merges and from which file, and find the mistakes it ignores in silence | [claude-settings-doctor](https://github.com/nrzz/claude-settings-doctor) | 0: it runs outside Claude; the optional skill costs about 340 tokens per use |
 | See what auto mode and its classifier decided, which refusals were the service rather than your settings, and lint the autoMode settings | [claude-automode-doctor](https://github.com/nrzz/claude-automode-doctor) | 0: it runs outside Claude; the optional skill costs about 280 tokens per use |
 | List every MCP server Claude Code would load and from which file, start each one the way Claude Code would, and see what its tools cost | [claude-mcp-check](https://github.com/nrzz/claude-mcp-check) | 0: it runs outside Claude; the optional skill costs about 490 tokens per use |
+| Find out whether Claude Code's Bash sandbox can work on your machine, why a command ran inside it or outside it, and which sandbox settings never take effect | [claude-sandbox-doctor](https://github.com/nrzz/claude-sandbox-doctor) | 0: it runs outside Claude; the optional skill costs about 440 tokens per use |
+| On Windows: which shell the Bash tool gets and why, every claude on your machine and which one runs, and the setup problems behind common Windows issues | [claude-windows-doctor](https://github.com/nrzz/claude-windows-doctor) | 0: it runs outside Claude; the optional skill costs about 540 tokens per use |
 
 Every tool's README has a "What it costs in tokens" table with the details, and a "What was verified, and how" section that says what was checked and what was not.
 
@@ -52,7 +54,7 @@ Every tool's README has a "What it costs in tokens" table with the details, and 
 
 ### The plugins, from one marketplace
 
-Spendcap (cost guard) is in Anthropic's plugin directory since 14 October 2026, so it installs with nothing to add first: `/plugin install spendcap@anthropic-plugin-directory`, and `/plugin`, Discover, lists it. For all fourteen, add this marketplace. If you prefer Claude Code's own plugin system, in Claude Code:
+Spendcap (cost guard) is in Anthropic's plugin directory since 14 October 2026, so it installs with nothing to add first: `/plugin install spendcap@anthropic-plugin-directory`, and `/plugin`, Discover, lists it. For all sixteen, add this marketplace. If you prefer Claude Code's own plugin system, in Claude Code:
 
 ```text
 /plugin marketplace add nrzz/claude-code-toolkit
@@ -77,10 +79,12 @@ Then install any of the others the same way, or browse them with `/plugin`:
 | Settings doctor | `/plugin install settings-doctor@claude-code-toolkit` |
 | Auto mode doctor | `/plugin install automode-doctor@claude-code-toolkit` |
 | MCP check | `/plugin install mcp-check@claude-code-toolkit` |
+| Sandbox doctor | `/plugin install sandbox-doctor@claude-code-toolkit` |
+| Windows doctor | `/plugin install windows-doctor@claude-code-toolkit` |
 
 Five plugins were renamed on 4 October 2026 so that each has a name of its own in Anthropic's plugin directory: `glow` is now `glowline`, `glow-hud` is `glowbar`, `notify` is `nudge`, `cost-guard` is `spendcap` and `replay` is `replayer`. If you installed one under its old name, uninstall it and install the new one; the tools, their commands and your settings are unchanged.
 
-By Claude Code's own estimate (`claude plugin details`), all fourteen together add about 212 always-on tokens, and only because the estimate counts the descriptions of user-only skills, which Claude Code leaves out of the list it gives the model. So the end-to-end test checks the request itself: with all fourteen plugins installed it has Claude Code resume a session against a fake API on localhost, and no request that reaches the fake API may mention any user-only skill, while a skill the model may invoke is listed in it. The estimate stays as a tripwire: since 1.7.0 the end-to-end test keeps it under 250 always-on tokens, so that a skill the model can invoke cannot slip in unnoticed. The limit was 150 until the tenth plugin and 200 until the thirteenth: a new tool's user-only skill adds 9 to 17 to the estimate (session tidy's 15, permission doctor's 17, hook bench's 15, settings doctor's 11, auto mode doctor's about 12, MCP check's about 9; the nine before added 148), and cutting a description until it fits would only make it harder to read, to save text the model is never sent.
+By Claude Code's own estimate (`claude plugin details`), all sixteen together add about 233 always-on tokens, and only because the estimate counts the descriptions of user-only skills, which Claude Code leaves out of the list it gives the model. So the end-to-end test checks the request itself: with all sixteen plugins installed it has Claude Code resume a session against a fake API on localhost, and no request that reaches the fake API may mention any user-only skill, while a skill the model may invoke is listed in it. The estimate stays as a tripwire: since 1.7.0 the end-to-end test keeps it under 250 always-on tokens, so that a skill the model can invoke cannot slip in unnoticed. The limit was 150 until the tenth plugin and 200 until the thirteenth: a new tool's user-only skill adds 9 to 17 to the estimate (session tidy's 15, permission doctor's 17, hook bench's 15, settings doctor's 11, auto mode doctor's about 12, MCP check's about 9, sandbox doctor's and windows doctor's together about 21; the nine before added 148), and cutting a description until it fits would only make it harder to read, to save text the model is never sent.
 
 ### One tool at a time
 
@@ -139,26 +143,34 @@ npx -y github:nrzz/claude-mcp-check show
 ```
 
 ```bash
+npx -y github:nrzz/claude-sandbox-doctor check
+```
+
+```bash
+npx -y github:nrzz/claude-windows-doctor check
+```
+
+```bash
 npx -y github:nrzz/claude-code-glow install
 ```
 
-Guardrails, notify, cost guard and session tidy have the same `init`; handover's and team sync's run in the project folder. Every tool that changes your Claude Code settings has an `uninstall` that takes out what it added; team sync and the starter kits write files into the project, which you commit or delete like any other. Permission doctor installs nothing: it writes a settings file only when you ask it to (`lint --fix`, `suggest --write`), after a backup that `restore` puts back. Hook bench installs nothing either, and never writes a settings file: it runs your hooks and reports. Relocate changes nothing without `--yes`, and its `undo` puts the folder back where it was. Settings doctor writes a settings file only with `init`, `build`, `absorb`, `watch` and `restore`, after a backup that `restore` puts back. Auto mode doctor writes one only with `suggest --write`, and MCP check only with `toggle`, each after a backup that `restore` puts back; MCP check starts your MCP servers only when you run `check` or `why`.
+Guardrails, notify, cost guard and session tidy have the same `init`; handover's and team sync's run in the project folder. Every tool that changes your Claude Code settings has an `uninstall` that takes out what it added; team sync and the starter kits write files into the project, which you commit or delete like any other. Permission doctor installs nothing: it writes a settings file only when you ask it to (`lint --fix`, `suggest --write`), after a backup that `restore` puts back. Hook bench installs nothing either, and never writes a settings file: it runs your hooks and reports. Relocate changes nothing without `--yes`, and its `undo` puts the folder back where it was. Settings doctor writes a settings file only with `init`, `build`, `absorb`, `watch` and `restore`, after a backup that `restore` puts back. Auto mode doctor writes one only with `suggest --write`, and MCP check only with `toggle`, each after a backup that `restore` puts back; MCP check starts your MCP servers only when you run `check` or `why`. Sandbox doctor writes no settings file. Windows doctor changes only the Windows user environment, and only with `fix --git-bash`, which `undo` takes out again.
 
 ## Built the same way
 
 - **No dependencies.** Node 18 or newer and nothing from npm, so there is nothing to audit but the code itself.
 - **Token cost is a feature.** A hook puts text in front of the model only when that is its job (a recalled line, a teammate's news, the reason a command was stopped), and the README says how much. Everything else talks to you, not to the model. Skills that Claude does not need to see are user-only.
 - **Your settings stay yours.** Each tool backs up `settings.json` before writing, changes only the keys it is there for, leaves a file that is not valid JSON alone, and its `uninstall` takes out what it added (handover keeps the effort defaults it set, and says so).
-- **Tested.** Over 6,900 automated tests across the seventeen repositories, each run on Windows, macOS and Linux with Node 20, 22 and 24, and on Linux with Node 18, plus the end-to-end run below.
+- **Tested.** Over 7,300 automated tests across the nineteen repositories, each run on Windows, macOS and Linux with Node 20, 22 and 24, and on Linux with Node 18, plus the end-to-end run below.
 
 ## Tested together
 
 [`e2e/run.mjs`](e2e/run.mjs) does what a new user would, on a clean machine:
 
 1. It makes a throwaway home folder and Claude Code config folder that already hold settings of their own (a theme, an env variable, a permission, a Stop hook).
-2. It installs every tool from GitHub with `npx` and runs every hook exactly as `settings.json` lists it, with the JSON Claude Code sends: guardrails denies `rm -rf /` and passes `npm test` in silence, notify stays quiet after a 5-second turn and pings after a 60-second one, cost guard holds a prompt over a hard budget but lets `/compact` through, the starter kit's CLAUDE.md passes the doctor in CI mode, two teammates share a session through one git remote, a replay export escapes hostile text, session tidy keeps one old session and moves another to its trash and back byte for byte, permission doctor explains a prompt, finds a dead rule and proposes a rule from a transcript without changing a file, hook bench runs a settings file's hooks with the JSON Claude Code sends and calls the deny a deny, the invalid output an error and the typo a hook that never fires, relocate moves a config folder with its sessions to another folder and puts it back byte for byte, settings doctor finds the trailing comma that makes Claude Code ignore a whole file, an unknown key and a wrong type, and builds `settings.json` from a commented `settings.jsonc`, auto mode doctor tells a classifier refusal from a refusal with no verdict in a transcript and finds an `autoMode` list that drops the built-in rules, MCP check starts a stdio server the way Claude Code would, lists and sizes its tools, and finds a `.mcp.json` server pending approval and a `${VAR}` set nowhere, and handover's self-test passes and its `init` sets up a project, changes nothing on a second run and uninstalls cleanly.
+2. It installs every tool from GitHub with `npx` and runs every hook exactly as `settings.json` lists it, with the JSON Claude Code sends: guardrails denies `rm -rf /` and passes `npm test` in silence, notify stays quiet after a 5-second turn and pings after a 60-second one, cost guard holds a prompt over a hard budget but lets `/compact` through, the starter kit's CLAUDE.md passes the doctor in CI mode, two teammates share a session through one git remote, a replay export escapes hostile text, session tidy keeps one old session and moves another to its trash and back byte for byte, permission doctor explains a prompt, finds a dead rule and proposes a rule from a transcript without changing a file, hook bench runs a settings file's hooks with the JSON Claude Code sends and calls the deny a deny, the invalid output an error and the typo a hook that never fires, relocate moves a config folder with its sessions to another folder and puts it back byte for byte, settings doctor finds the trailing comma that makes Claude Code ignore a whole file, an unknown key and a wrong type, and builds `settings.json` from a commented `settings.jsonc`, auto mode doctor tells a classifier refusal from a refusal with no verdict in a transcript and finds an `autoMode` list that drops the built-in rules, MCP check starts a stdio server the way Claude Code would, lists and sizes its tools, and finds a `.mcp.json` server pending approval and a `${VAR}` set nowhere, sandbox doctor finds an `allowedDomains` entry with a scheme and tells a command that an `excludedCommands` entry takes out of the sandbox from one that stays in it, windows doctor reports the shell Claude Code would give the model on Windows and says there is nothing to check on Linux and macOS, and handover's self-test passes and its `init` sets up a project, changes nothing on a second run and uninstalls cleanly.
 3. In a second home folder it runs the one-command setup as a user would: `install recommended,cost-guard` with options, a guardrails hook it installed denying `rm -rf /`, `status` reading the choices back, then the setup page started for real and driven through its own API (the one-time key refused when missing, Apply changing a theme and removing a tool, Done stopping it), and `uninstall all`.
-4. With a Claude Code CLI available, it validates this marketplace, installs all fourteen plugins from GitHub with `claude plugin install`, runs the guardrails, notify, cost guard and session tidy plugins' own hooks and the permission doctor, hook bench, settings doctor, auto mode doctor and MCP check plugins' skill commands from the installed copies, checks the token estimate and that Claude Code sends the model none of their user-only skills, and runs the HUD's engine tests inside that Claude Code.
+4. With a Claude Code CLI available, it validates this marketplace, installs all sixteen plugins from GitHub with `claude plugin install`, runs the guardrails, notify, cost guard and session tidy plugins' own hooks and the permission doctor, hook bench, settings doctor, auto mode doctor, MCP check, sandbox doctor and windows doctor plugins' skill commands from the installed copies, checks the token estimate and that Claude Code sends the model none of their user-only skills, and runs the HUD's engine tests inside that Claude Code.
 5. It uninstalls everything and checks that `settings.json` is exactly what the user had, in both home folders.
 
 ```bash

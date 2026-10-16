@@ -7,7 +7,7 @@ const v = (id, o, ctx) => byId(id).validate(o, ctx);
 const bad = (id, o, re, ctx) => assert.throws(() => v(id, o, ctx), (e) => e instanceof OptionError && re.test(e.message));
 
 test("every tool has a repository, a command file, a summary, a token note and valid defaults", () => {
-  assert.equal(TOOLS.length, 17);
+  assert.equal(TOOLS.length, 19);
   for (const t of TOOLS) {
     assert.match(t.repo, /^claude-[a-z-]+$/, t.id);
     assert.match(t.bin, /\.mjs$/, t.id);
@@ -98,6 +98,26 @@ test("MCP check: an on-demand tool with nothing to install and two commands that
   const ctx = { project: "/work/app" };
   assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["show", "--project", "/work/app"], ["lint", "--project", "/work/app"]]);
   for (const a of Object.values(t.actions)) assert.equal(["check", "why", "toggle", "restore"].includes(a.args({}, ctx)[0]), false, "the page never starts a server or writes a settings file");
+});
+
+test("sandbox doctor: an on-demand tool with nothing to install and three commands that only read; check runs no Claude Code", () => {
+  const t = byId("sandbox-doctor");
+  assert.deepEqual([t.scope, t.plugin, !!t.recommended, t.install, t.change, t.uninstall], ["action", undefined, false, undefined, undefined, undefined]);
+  assert.deepEqual(v("sandbox-doctor", { preset: "ignored" }), {}, "it has no options");
+  assert.deepEqual(Object.keys(t.actions), ["check", "show", "lint"]);
+  const ctx = { project: "/work/app" };
+  assert.deepEqual(Object.values(t.actions).map((a) => a.args({}, ctx)), [["check"], ["show", "--project", "/work/app"], ["lint", "--project", "/work/app"]]);
+  for (const a of Object.values(t.actions)) assert.equal(a.args({}, ctx).includes("--live"), false, "the page never runs Claude Code");
+});
+
+test("windows doctor: an on-demand tool with nothing to install and one command that only reads; never fix or undo", () => {
+  const t = byId("windows-doctor");
+  assert.deepEqual([t.scope, t.plugin, !!t.recommended, t.install, t.change, t.uninstall], ["action", undefined, false, undefined, undefined, undefined]);
+  assert.deepEqual(v("windows-doctor", { preset: "ignored" }), {}, "it has no options");
+  assert.deepEqual(Object.keys(t.actions), ["check"]);
+  const ctx = { project: "/work/app" };
+  assert.deepEqual(t.actions.check.args({}, ctx), ["check", "--project", "/work/app"]);
+  assert.equal(["fix", "undo", "--live"].some((x) => t.actions.check.args({}, ctx).includes(x)), false, "the page never changes the user environment or runs Claude Code");
 });
 
 test("notify: a set line only for what differs, secrets kept unless replaced, an existing ntfy topic kept", () => {

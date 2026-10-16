@@ -4,6 +4,12 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-17
+
+- An eighteenth and a nineteenth tool. [claude-sandbox-doctor](https://github.com/nrzz/claude-sandbox-doctor) says whether Claude Code's Bash sandbox can work on the machine, shows the merged sandbox settings with their files, says why a command runs inside the sandbox, outside it or not at all, and lints the sandbox settings that never take effect; its answers were put to six Claude Code versions in CI. [claude-windows-doctor](https://github.com/nrzz/claude-windows-doctor) says which shell the Bash tool gets on Windows and why, lists every `claude` on the machine, and finds the setup problems behind common Windows issues; `fix --git-bash` sets `CLAUDE_CODE_GIT_BASH_PATH` and `undo` takes it out. Both are on-demand tools on the setup page whose buttons only read (sandbox doctor: check, show and lint; windows doctor: check) and plugins in this marketplace with one user-only skill each.
+- Always-on tokens: the sixteen plugins come to about 233 by Claude Code's own estimate, under the tripwire of 250; the gate stays the check that no request the fake API receives mentions a user-only skill.
+- Website and README: nineteen tools, sixteen plugins, the two cards and rows, over 7,300 tests, and the preview images say nineteen.
+
 ## [1.7.0] - 2026-10-16
 
 - A sixteenth and a seventeenth tool. [claude-automode-doctor](https://github.com/nrzz/claude-automode-doctor) reads what Claude Code's auto mode and its classifier decided from your transcripts: who made each tool decision, the commands the classifier refused, and the refusals that were no verdict at all; its lint finds an `autoMode` list that drops the built-in rules because `"$defaults"` is missing. [claude-mcp-check](https://github.com/nrzz/claude-mcp-check) lists every MCP server Claude Code would load with the file it came from, starts each one the way Claude Code would and sizes its tools, and lints the configuration. Both are on-demand tools on the setup page (auto mode doctor with report, show and lint; MCP check with show and lint; none of the buttons writes a file or starts a server) and plugins in this marketplace with one user-only skill each.
@@ -66,6 +72,7 @@ All notable changes to Claude Code toolkit are written here. The format follows 
 
 - First release: one plugin marketplace for glow, glow-hud, guardrails, notify, cost-guard, md-doctor and replay; the website; an end-to-end test that installs all nine tools from GitHub, runs their hooks, installs the plugins with Claude Code's own commands and checks that uninstalling restores the user's settings.
 
+[1.8.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/nrzz/claude-code-toolkit/compare/v1.4.0...v1.5.0

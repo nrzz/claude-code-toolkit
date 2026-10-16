@@ -90,6 +90,8 @@ test("uninstall all removes what is installed; status describes it", async () =>
   assert.match(status.out, /Settings doctor\s+runs on demand\n/);
   assert.match(status.out, /Auto mode doctor\s+runs on demand\n/);
   assert.match(status.out, /MCP check\s+runs on demand\n/);
+  assert.match(status.out, /Sandbox doctor\s+runs on demand\n/);
+  assert.match(status.out, /Windows doctor\s+runs on demand\n/);
   const r = await run(["uninstall", "all", "--source", tools.dir], env, project);
   assert.equal(r.code, 0, r.err);
   assert.deepEqual(tools.calls().map((c) => c.args.join(" ")), ["uninstall --scope user", "uninstall", "uninstall", "uninstall", "uninstall"]);

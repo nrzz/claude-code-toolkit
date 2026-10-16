@@ -188,6 +188,32 @@
         "url": "https://github.com/nrzz/claude-mcp-check.git"
       },
       "homepage": "https://github.com/nrzz/claude-mcp-check"
+    },
+    {
+      "name": "sandbox-doctor",
+      "description": "Whether Claude Code's Bash sandbox can work on this machine (bubblewrap, socat and user namespaces on Linux, seatbelt on macOS), the merged sandbox settings with the file each came from, why a command runs inside the sandbox, outside it or not at all, and a lint for the sandbox settings that can never take effect (/sandbox-doctor:check runs the lint and the host check and answers in at most 10 lines). The claude-sandbox-doctor command does the same from a terminal, at no token cost. The skill is user-only and costs about 440 tokens when you run it.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "security",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-sandbox-doctor.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-sandbox-doctor"
+    },
+    {
+      "name": "windows-doctor",
+      "description": "On Windows: which shell Claude Code's Bash tool will get and why, every claude on the machine and which one runs first, and the setup problems behind common Windows issues, such as Git Bash that Claude Code cannot find, long paths, core.autocrlf and the PowerShell execution policy (/windows-doctor:check runs the check for this project and answers in at most 10 lines). The claude-windows-doctor command does the same from a terminal, at no token cost. The skill is user-only and costs about 540 tokens when you run it.",
+      "author": {
+        "name": "Naresh Prabu"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nrzz/claude-windows-doctor.git"
+      },
+      "homepage": "https://github.com/nrzz/claude-windows-doctor"
     }
   ]
 }
